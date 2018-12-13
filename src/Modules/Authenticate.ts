@@ -1,61 +1,49 @@
 'use strict';
 
 // Internal Modules
-import * as RethinkQueries from 'src/Modules/RethinkQueries';
-import { handleResourceError } from 'src/Modules/Server/Utilities';
-import { invalidAuthorisationHeader, authenticationUserNotFound } from 'src/Modules/Server/Errors';
+import { handleResourceError } from 'src/Modules/Utilities';
 
 // Types
-import { ExpressRequestGeneric, ExpressResponseAugmented, ExpressNextFunction } from 'src/Types';
-import { Token as UserToken } from 'src/Modules/RethinkQueries/User/Tokens';
+import
+{
+	Request as ExpressRequest,
+	Response as ExpressResponse,
+	NextFunction as ExpressNextFunction
+} from 'express';
 import { ResourceMethod } from './';
+import { ApiError } from './Errors';
+export interface ResourceMethodConfig
+{
+	callback: Callback;
+	/** Authentication is evaluated only if provided in request. */
+	optional?: boolean;
+};
+export type Callback = ({method, request, response}: {method: ResourceMethod, request: ExpressRequest, response: ExpressResponse}) => CallbackPromise;
+export interface CallbackPromise extends Promise <CallbackResult> {};
+export type CallbackResult = { data: object } | { error: ApiError };
 
-export default async function authenticate({method, request, response, next}: {method: ResourceMethod, request: ExpressRequestGeneric, response: ExpressResponseAugmented, next: ExpressNextFunction})
+export default async function authenticate({method, request, response, next}: {method: ResourceMethod, request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction})
 {
 	if (!method.authenticate)
 	{
 		next();
 		return;
 	};
-	const token = getAuthorizationHeaderToken(request);
-	if (!token)
-	{
-		if (method.authenticate === 'optional')
-		{
-			response.locals.authentication = null;
-			next();
-			return;
-		}
-		else
-		{
-			handleResourceError({response, apiError: invalidAuthorisationHeader});
-			return;
-		};
-	};
-	let userToken: UserToken;
+	let result: CallbackResult;
 	try
 	{
-		userToken = await RethinkQueries.User.Tokens.get(token);
+		result = await method.authenticate.callback({method, request, response});
 	}
 	catch (error)
 	{
-		handleResourceError({error, response});
+		handleResourceError({response, apiError: error instanceof ApiError ? error : undefined});
 		return;
 	};
-	if (!userToken)
+	if ('error' in result)
 	{
-		handleResourceError({response, apiError: authenticationUserNotFound});
+		handleResourceError({response, apiError: result.error});
 		return;
 	};
-	response.locals.authentication = { userId: userToken.userId };
+	response.locals.authentication = result.data;
 	next();
-};
-
-export function getAuthorizationHeaderToken(request: ExpressRequestGeneric)
-{
-	const header = request.get('Authorization');
-	if (!header) return;
-	const token = header.split(' ')[1];
-	if (!token) return;
-	return token;
 };

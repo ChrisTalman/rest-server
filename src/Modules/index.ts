@@ -50,16 +50,12 @@ export interface RetrieveParameters <GenericRequest extends ExpressRequest, Gene
 };
 export type ResourceRetrieveValue = object | false;
 // Resource Methods
+import { ResourceMethodConfig as ResourceMethodAuthenticate } from './Authenticate';
 export interface ResourceMethods extends Array<ResourceMethod> {};
 export interface ResourceMethod
 {
 	name: 'GET' | 'POST' | 'PATCH' | 'DELETE';
-	/**
-		true: authentication required
-		false: authentication ignored
-		'optional': authentication evaluated if provided
-	*/
-	authenticate?: boolean | 'optional';
+	authenticate?: ResourceMethodAuthenticate;
 	schema?: Schema;
 	pluck?: Pluck.Variant;
 	handler: ResourceMethodHandler;
