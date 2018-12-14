@@ -51,15 +51,19 @@ export interface RetrieveParameters <GenericRequest extends ExpressRequest, Gene
 export type ResourceRetrieveValue = object | false;
 // Resource Methods
 import { ResourceMethodConfig as ResourceMethodAuthenticate } from './Authenticate';
-export interface ResourceMethods extends Array<ResourceMethod> {};
-export interface ResourceMethod
+export type ResourceMethods =
 {
-	name: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+	[MethodName in ResourceMethodNameUpperCase]?: ResourceMethod <MethodName>
+};
+export interface ResourceMethod <GenericMethodName = ResourceMethodNameUpperCase>
+{
+	name?: GenericMethodName;
 	authenticate?: ResourceMethodAuthenticate;
 	schema?: Schema;
 	pluck?: Pluck.Variant;
 	handler: ResourceMethodHandler;
 };
+type ResourceMethodNameUpperCase = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 type ResourceMethodNameLowerCase = 'get' | 'post' | 'patch' | 'delete';
 export type ResourceMethodHandler = (parameters: ResourceMethodHandlerParameters) => void;
 export interface ResourceMethodHandlerParameters <GenericRequest extends ExpressRequest = ExpressRequest, GenericResponse extends ExpressResponse = ExpressResponse>
@@ -148,7 +152,8 @@ function augmentAncestors({resource, ancestors}: {resource: Resource, ancestors:
 function logPath({resource, path, router}: {resource: Resource, path: string, router: ExpressRouter})
 {
 	if (!router) return;
-	const methodsLog = (resource.methods && resource.methods.length > 0) ? ' => ' + resource.methods.map(method => method.name).join(' ') : '';
+	const methodEntries = resource.methods && Object.entries(resource.methods) as Array<[ResourceMethodNameUpperCase, ResourceMethod]>;
+	const methodsLog = (methodEntries && methodEntries.length > 0) ? ' => ' + methodEntries.map(entry => entry[0]).join(' ') : '';
 	const pathLog = path + methodsLog;
 	console.log(pathLog);
 };
@@ -162,23 +167,18 @@ function initialiseResourceMiddleware(resource: Resource, router: ExpressRouter,
 
 function initialiseResourceMethods(resource: Resource, route: ExpressRoute, resourceAncestors: Resources)
 {
-	if (!resource.methods)
+	if (!resource.methods) return;
+	for (let methodName of Object.keys(resource.methods) as Array<ResourceMethodNameUpperCase>)
 	{
-		return;
-	};
-	for (let method of resource.methods)
-	{
-		const duplicate = resource.methods.filter(otherMethod => method.name === otherMethod.name).length > 1;
-		if (duplicate)
-		{
-			console.warn('Duplicate Method:', method.name);
-		};
-		initialiseResourceMethod(method, route, resourceAncestors);
+		const method = resource.methods[methodName];
+		initialiseResourceMethod(methodName, method, route, resourceAncestors);
 	};
 };
 
-function initialiseResourceMethod(method: ResourceMethod, route: ExpressRoute, resourceAncestors: Resources)
+function initialiseResourceMethod(name: ResourceMethodNameUpperCase, method: ResourceMethod, route: ExpressRoute, resourceAncestors: Resources)
 {
+	if (typeof method.name === 'string' && method.name !== name) throw new ResourceMethodMismatch({name, method});
+	method.name = name;
 	const methodIdentifier = method.name.toLowerCase();
 	const methodHandler = route[methodIdentifier as ResourceMethodNameLowerCase].bind(route) as ExpressRouteHandler <ExpressRoute>;
 	methodHandler((request, response, next) => authenticate({method, request, response, next}));
@@ -186,6 +186,15 @@ function initialiseResourceMethod(method: ResourceMethod, route: ExpressRoute, r
 	initialiseMethodSchema(methodIdentifier, method, route);
 	if (method.pluck) methodHandler(validatePluck.bind(null, method));
 	methodHandler((request, response) => handleResourceMethod({request, response, method}));
+};
+
+class ResourceMethodMismatch extends Error
+{
+	constructor({name, method}: {name: string, method: ResourceMethod})
+	{
+		const message = 'Resource method name \'' + name + '\' mismatch with method.name \'' + method.name + '\'';
+		super(message);
+	};
 };
 
 function initialiseResourceMethodParameter(methodHandler: ExpressRouteHandler <ExpressRoute>, resourceAncestors: Resources)

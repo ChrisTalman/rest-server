@@ -4,15 +4,19 @@ import { Request as ExpressRequest, Response as ExpressResponse } from 'express'
 
 declare module '@bluecewe/rest-server'
 {
-    export interface ResourceMethods extends Array<ResourceMethod> {}
-    export interface ResourceMethod
+    export type ResourceMethods =
     {
-    	name: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+    	[MethodName in ResourceMethodNameUpperCase]?: ResourceMethod <MethodName>
+    };
+    export interface ResourceMethod <GenericMethodName = ResourceMethodNameUpperCase>
+    {
+    	name?: GenericMethodName;
     	authenticate?: ResourceMethodAuthenticate;
     	schema?: Schema;
     	pluck?: Pluck.Variant;
     	handler: ResourceMethodHandler;
     }
+    type ResourceMethodNameUpperCase = 'GET' | 'POST' | 'PATCH' | 'DELETE';
     export interface ResourceMethodAuthenticate
     {
         callback: Callback;
