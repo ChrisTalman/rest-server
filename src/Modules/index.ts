@@ -99,7 +99,7 @@ export interface Debug
 	paths?: boolean;
 };
 
-export function initialise(config: Config)
+export default function initialise(config: Config)
 {
 	const app: ExpressApplication = Express();
 	app.locals.config = config;

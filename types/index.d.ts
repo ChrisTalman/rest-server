@@ -52,4 +52,4 @@ export interface Config {
 export interface Debug {
     paths?: boolean;
 }
-export declare function initialise(config: Config): void;
+export default function initialise(config: Config): void;
