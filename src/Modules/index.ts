@@ -32,6 +32,7 @@ import
 	Response as ExpressResponse
 } from 'express';
 // Resource
+export interface Resources extends Array<Resource> {};
 export interface Resource
 {
 	name: string;
@@ -40,7 +41,6 @@ export interface Resource
 	methods?: ResourceMethods;
 	resources?: Resources;
 };
-export interface Resources extends Array<Resource> {};
 // Resource Retrieve
 export type ResourceRetrieve = (parameters: RetrieveParameters <any, any>) => Promise<ResourceRetrieveValue>;
 export interface RetrieveParameters <GenericRequest extends ExpressRequest, GenericResponse extends ExpressResponse>

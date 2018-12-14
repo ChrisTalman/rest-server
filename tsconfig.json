@@ -13,8 +13,6 @@
         "downlevelIteration": true,
         "alwaysStrict": true,
 		"allowSyntheticDefaultImports": true,
-		"declaration": true,
-		"declarationDir": "./types",
         "watch": true
     },
     "include":

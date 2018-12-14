@@ -13,18 +13,21 @@ export class ApiError
 	public code: string;
 	public status: number;
 	public message?: string;
-	constructor(parameters: ApiErrorParameters)
+	constructor(parameters: {code: string, status: number, message?: string, resourceName?: string})
 	{
 		this.initialiseProperties(parameters);
 	};
-	initialiseProperties(parameters: ApiErrorParameters)
+	private initialiseProperties(parameters: object)
 	{
-		this.code = parameters.code;
-		this.status = parameters.status;
-		this.message = parameters.message;
+		const keys = Object.keys(parameters);
+		for (let key of keys)
+		{
+			const value = parameters[key];
+			this[key] = value;
+		};
 	};
 	/** Generates an object to transport to an API client. */
-	toTransport()
+	public toTransport()
 	{
 		const transport =
 		{
