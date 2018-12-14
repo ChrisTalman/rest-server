@@ -41,7 +41,7 @@ declare module '@bluecewe/rest-server'
     	response: GenericResponse;
     }
     // Initialise
-    export default function initialise(): void;
+    export default function initialise(config: Config): void;
     export interface Resources extends Array<Resource> {}
     export interface Resource
     {
