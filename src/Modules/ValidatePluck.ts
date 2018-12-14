@@ -7,20 +7,18 @@
 import Joi from 'joi';
 
 // Internal Modules
-import * as ServerUtilities from 'src/Modules/Server/Utilities';
-import * as ServerErrors from 'src/Modules/Server/Errors';
-import isSubset from 'src/Modules/Utilities/IsSubset';
+import { handleResourceError } from 'src/Modules/Utilities';
+import { PluckRequired, PluckParse, PluckInvalid } from 'src/Modules/Errors';
 
 // Types
-import { ExpressRequestGeneric, ExpressResponseAugmented, ExpressNextFunction } from 'src/Types';
-import { ResourceMethod, Pluck } from './';
+import { Request as ExpressRequest, Response as ExpressResponse, NextFunction as ExpressNextFunction } from 'express';
+import { ResourceMethod } from './';
 interface Body
 {
 	pluck?: object;
 };
 
 // Constants
-const SOURCE_STRING_LENGTH_MAX = 1000;
 const SCHEMA = Joi.alternatives
 	(
 		Joi
@@ -46,12 +44,12 @@ const SCHEMA = Joi.alternatives
 			)
 	);
 
-export default function(method: ResourceMethod, request: ExpressRequestGeneric, response: ExpressResponseAugmented, next: ExpressNextFunction)
+export default function(method: ResourceMethod, request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction)
 {
 	const bodyProvided = request.query.hasOwnProperty('body');
 	if (!bodyProvided)
 	{
-		ServerUtilities.handleResourceError({response, apiError: ServerErrors.PluckRequired.generate()});
+		handleResourceError({response, apiError: PluckRequired.generate()});
 		return;
 	};
 	let body: Body;
@@ -61,19 +59,19 @@ export default function(method: ResourceMethod, request: ExpressRequestGeneric, 
 	}
 	catch (error)
 	{
-		ServerUtilities.handleResourceError({response, apiError: ServerErrors.PluckParse.generate()});
+		handleResourceError({response, apiError: PluckParse.generate()});
 		return;
 	};
 	const pluckProvided =  body.hasOwnProperty('pluck');
 	if (method.pluck && !pluckProvided)
 	{
-		ServerUtilities.handleResourceError({response, apiError: ServerErrors.PluckRequired.generate()});
+		handleResourceError({response, apiError: PluckRequired.generate()});
 		return;
 	};
 	const validated = Joi.validate(body.pluck, SCHEMA);
 	if (validated.error)
 	{
-		ServerUtilities.handleResourceError({response, apiError: ServerErrors.PluckInvalid.generate(validated.error.message)});
+		handleResourceError({response, apiError: PluckInvalid.generate(validated.error.message)});
 		return;
 	};
 	const pluck = validated.value;

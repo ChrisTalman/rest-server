@@ -1,15 +1,15 @@
 'use strict';
 
 // Internal Modules
-import { handleResourceError } from 'src/Modules/Server/Utilities';
-import * as ServerErrors from 'src/Modules/Server/Errors';
+import { handleResourceError } from 'src/Modules/Utilities';
+import { NotFound } from 'src/Modules/Errors';
 
 // Types
-import { ExpressRequestGeneric, ExpressResponseAugmented, ExpressNextFunction } from 'src/Types';
-import { ResourceRetrieveValue } from 'src/Modules/Server';
+import { Request as ExpressRequest, Response as ExpressResponse, NextFunction as ExpressNextFunction } from 'express';
+import { ResourceRetrieveValue } from 'src/Modules';
 import { Resource, Resources } from './';
 
-export default async function({resourceAncestors, request, response, next}: {resourceAncestors: Resources, request: ExpressRequestGeneric, response: ExpressResponseAugmented, next: ExpressNextFunction})
+export default async function({resourceAncestors, request, response, next}: {resourceAncestors: Resources, request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction})
 {
 	const promises = resourceAncestors.map(resource => retrieveParameter({resource, request, response}));
 	const results = await Promise.all(promises);
@@ -22,7 +22,7 @@ export default async function({resourceAncestors, request, response, next}: {res
 	If resource is a parameter, attempts to retrieve its data and expose in response.locals object.
 	Returns true if it succeeds, or resource is not a parameter. Otherwise, returns undefined.
 */
-async function retrieveParameter({resource, request, response}: {resource: Resource, request: ExpressRequestGeneric, response: ExpressResponseAugmented})
+async function retrieveParameter({resource, request, response}: {resource: Resource, request: ExpressRequest, response: ExpressResponse})
 {
 	if (!isParameter({resource})) return true;
 	let data: ResourceRetrieveValue;
@@ -46,14 +46,14 @@ async function retrieveParameter({resource, request, response}: {resource: Resou
 	};
 	if (!data)
 	{
-		handleResourceError({response, apiError: ServerErrors.NotFound.generate(resource)});
+		handleResourceError({response, apiError: NotFound.generate(resource)});
 		return;
 	};
 	augmentLocals(resource, response, data);
 	return true;
 };
 
-function augmentLocals(resource: Resource, response: ExpressResponseAugmented, data: object)
+function augmentLocals(resource: Resource, response: ExpressResponse, data: object)
 {
 	const resourceNameWithoutColon = resource.name.substring(1);
 	const resourceData = response.locals.resourceData || {};

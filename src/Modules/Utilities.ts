@@ -1,17 +1,14 @@
 'use strict';
 
-// Internal Modules
-import { logError } from 'src/Modules/Utilities';
-
 // Types
-import { ExpressResponseGeneric } from 'src/Types';
-import { ApiError, UnexpectedError } from 'src/Modules/Server/Errors';
+import { Response as ExpressResponse } from 'express';
+import { ApiError, UnexpectedError } from 'src/Modules/Errors';
 
 /** Handles the given resource error. */
-export function handleResourceError(parameters: {response: ExpressResponseGeneric, apiError?: ApiError, error?: Error, status?: number})
+export function handleResourceError(parameters: {response: ExpressResponse, apiError?: ApiError, error?: Error, status?: number})
 {
     const { response } = parameters;
-	if (parameters.error) logError(parameters.error);
+	if (parameters.error) console.log(parameters.error);
     if (response.headersSent) return;
 	const apiError = parameters.apiError || UnexpectedError.generate();
 	const status = parameters.status ? parameters.status : apiError.status;
