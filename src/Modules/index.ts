@@ -32,10 +32,14 @@ import
 	Response as ExpressResponse
 } from 'express';
 // Resource
-export interface Resources extends Array<Resource> {};
-export interface Resource
+export type Resources =
 {
-	name: string;
+	[Name in string]?: Resource <Name>
+};
+export interface ResourcesArray extends Array<Resource> {};
+export interface Resource <GenericName = string>
+{
+	name?: GenericName;
 	/** Method to retrieve resource. Stores resource in locals object. Returns 404 if not found. */
 	retrieve?: ResourceRetrieve;
 	methods?: ResourceMethods;
@@ -123,16 +127,18 @@ function initialiseExpress(app: ExpressApplication)
 function initialiseResources(app: ExpressApplication)
 {
 	const router = Express.Router();
-	for (let resource of app.locals.config.resources)
+	for (let resource of Object.entries(app.locals.config.resources))
 	{
-		initialiseResource({resource, router, path: '', resourceAncestors: []});
+		initialiseResource({name: resource[0], resource: resource[1], router, path: '', resourceAncestors: []});
 	};
 	app.use(app.locals.config.root, router);
 	listenResourceNotFound(app);
 };
 
-function initialiseResource({resource, router, path, resourceAncestors}: {resource: Resource, router: ExpressRouter, path: string, resourceAncestors: Resources})
+function initialiseResource({name, resource, router, path, resourceAncestors}: {name: string, resource: Resource, router: ExpressRouter, path: string, resourceAncestors: ResourcesArray})
 {
+	if (typeof resource.name === 'string' && resource.name !== name) throw new ResourceNameMismatch({name, resource});
+	resource.name = name;
 	path += '/' + resource.name;
 	resourceAncestors = augmentAncestors({resource, ancestors: resourceAncestors});
 	logPath({resource, path, router});
@@ -140,10 +146,19 @@ function initialiseResource({resource, router, path, resourceAncestors}: {resour
 	initialiseSubresources(resource, router, path, resourceAncestors);
 };
 
-/** Creates new array, in which existing resources are first added, and then the newest resource at the end. */
-function augmentAncestors({resource, ancestors}: {resource: Resource, ancestors: Resources})
+class ResourceNameMismatch extends Error
 {
-	const augmented: Resources = [];
+	constructor({name, resource}: {name: string, resource: Resource})
+	{
+		const message = 'Resource name \'' + name + '\' mismatch with resource.name \'' + resource.name + '\'';
+		super(message);
+	};
+};
+
+/** Creates new array, in which existing resources are first added, and then the newest resource at the end. */
+function augmentAncestors({resource, ancestors}: {resource: Resource, ancestors: ResourcesArray})
+{
+	const augmented: ResourcesArray = [];
 	augmented.push(... ancestors, resource);
 	return augmented;
 };
@@ -158,14 +173,14 @@ function logPath({resource, path, router}: {resource: Resource, path: string, ro
 	console.log(pathLog);
 };
 
-function initialiseResourceMiddleware(resource: Resource, router: ExpressRouter, path: string, resourceAncestors: Resources)
+function initialiseResourceMiddleware(resource: Resource, router: ExpressRouter, path: string, resourceAncestors: ResourcesArray)
 {
 	const route = router.route(path);
 	initialiseResourceMethods(resource, route, resourceAncestors);
 	route.all((request, response) => handleResourceMethodUnavailable({request, response}));
 };
 
-function initialiseResourceMethods(resource: Resource, route: ExpressRoute, resourceAncestors: Resources)
+function initialiseResourceMethods(resource: Resource, route: ExpressRoute, resourceAncestors: ResourcesArray)
 {
 	if (!resource.methods) return;
 	for (let methodName of Object.keys(resource.methods) as Array<ResourceMethodNameUpperCase>)
@@ -175,7 +190,7 @@ function initialiseResourceMethods(resource: Resource, route: ExpressRoute, reso
 	};
 };
 
-function initialiseResourceMethod(name: ResourceMethodNameUpperCase, method: ResourceMethod, route: ExpressRoute, resourceAncestors: Resources)
+function initialiseResourceMethod(name: ResourceMethodNameUpperCase, method: ResourceMethod, route: ExpressRoute, resourceAncestors: ResourcesArray)
 {
 	if (typeof method.name === 'string' && method.name !== name) throw new ResourceMethodMismatch({name, method});
 	method.name = name;
@@ -197,7 +212,7 @@ class ResourceMethodMismatch extends Error
 	};
 };
 
-function initialiseResourceMethodParameter(methodHandler: ExpressRouteHandler <ExpressRoute>, resourceAncestors: Resources)
+function initialiseResourceMethodParameter(methodHandler: ExpressRouteHandler <ExpressRoute>, resourceAncestors: ResourcesArray)
 {
 	methodHandler((request, response, next) => handleResourceMethodParameter({resourceAncestors, request, response, next}));
 };
@@ -255,15 +270,15 @@ function handleResourceMethodUnavailable({response}: ResourceMethodHandlerParame
 	response.sendStatus(405);
 };
 
-function initialiseSubresources(resource: Resource, router: ExpressRouter, path: string, resourceAncestors: Resources)
+function initialiseSubresources(resource: Resource, router: ExpressRouter, path: string, resourceAncestors: ResourcesArray)
 {
 	if (!resource.resources)
 	{
 		return;
 	};
-	for (let subresource of resource.resources)
+	for (let subresource of Object.entries(resource.resources))
 	{
-		initialiseResource({resource: subresource, router, path, resourceAncestors});
+		initialiseResource({name: subresource[0], resource: subresource[1], router, path, resourceAncestors});
 	};
 };
 

@@ -7,9 +7,9 @@ import { NotFound } from 'src/Modules/Errors';
 // Types
 import { Request as ExpressRequest, Response as ExpressResponse, NextFunction as ExpressNextFunction } from 'express';
 import { ResourceRetrieveValue } from 'src/Modules';
-import { Resource, Resources } from './';
+import { Resource, ResourcesArray } from './';
 
-export default async function({resourceAncestors, request, response, next}: {resourceAncestors: Resources, request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction})
+export default async function({resourceAncestors, request, response, next}: {resourceAncestors: ResourcesArray, request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction})
 {
 	const promises = resourceAncestors.map(resource => retrieveParameter({resource, request, response}));
 	const results = await Promise.all(promises);

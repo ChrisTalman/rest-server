@@ -4,6 +4,21 @@ import { Request as ExpressRequest, Response as ExpressResponse } from 'express'
 
 declare module '@bluecewe/rest-server'
 {
+    // Initialise
+    export default function initialise(config: Config): void;
+    export type Resources =
+    {
+    	[Name in string]?: Resource <Name>
+    };
+    export interface Resource <GenericName extends string = string>
+    {
+    	name?: GenericName;
+    	/** Method to retrieve resource. Stores resource in locals object. Returns 404 if not found. */
+    	retrieve?: ResourceRetrieve;
+    	methods?: ResourceMethods;
+    	resources?: Resources;
+    }
+    // Resource Methods
     export type ResourceMethods =
     {
     	[MethodName in ResourceMethodNameUpperCase]?: ResourceMethod <MethodName>
@@ -43,17 +58,6 @@ declare module '@bluecewe/rest-server'
     {
     	request: GenericRequest;
     	response: GenericResponse;
-    }
-    // Initialise
-    export default function initialise(config: Config): void;
-    export interface Resources extends Array<Resource> {}
-    export interface Resource
-    {
-    	name: string;
-    	/** Method to retrieve resource. Stores resource in locals object. Returns 404 if not found. */
-    	retrieve?: ResourceRetrieve;
-    	methods?: ResourceMethods;
-    	resources?: Resources;
     }
     // Resource Retrieve
     export type ResourceRetrieve = (parameters: RetrieveParameters <any, any>) => Promise<ResourceRetrieveValue>;
