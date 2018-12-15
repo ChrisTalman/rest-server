@@ -20,6 +20,7 @@ import validatePluck from './ValidatePluck';
 import handleResourceMethodParameter from './Retrieve';
 import * as Errors from './Errors';
 import { handleResourceError } from './Utilities';
+export * from './Utilities';
 
 // Types
 import

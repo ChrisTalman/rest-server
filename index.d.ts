@@ -6,13 +6,13 @@ declare module '@bluecewe/rest-server'
 {
     // Initialise
     export default function initialise(config: Config): void;
-    export type Resources =
+    export interface Resources
     {
-    	[Name in string]?: Resource <Name>
-    };
-    export interface Resource <GenericName extends string = string>
+    	[name: string]: Resource;
+    }
+    export interface Resource
     {
-    	name?: GenericName;
+    	name?: string;
     	/** Method to retrieve resource. Stores resource in locals object. Returns 404 if not found. */
     	retrieve?: ResourceRetrieve;
     	methods?: ResourceMethods;
@@ -88,4 +88,7 @@ declare module '@bluecewe/rest-server'
     	/** Generates an object to transport to an API client. */
     	toTransport(): { code: string; message: string; };
     }
+    // Utilities
+    export function handleResourceSuccess({response, json}: {response: ExpressResponse, json?: any}): void;
+    export function handleResourceError({response, apiError, error, status}: {response: ExpressResponse, apiError?: ApiError, error?: Error, status?: number}): void;
 }
