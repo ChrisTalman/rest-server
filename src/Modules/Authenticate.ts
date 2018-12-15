@@ -4,19 +4,18 @@
 import { handleResourceError } from 'src/Modules/Utilities';
 
 // Types
-import
-{
-	Request as ExpressRequest,
-	Response as ExpressResponse,
-	NextFunction as ExpressNextFunction
-} from 'express';
+import { NextFunction as ExpressNextFunction } from 'express';
+import { ExpressRequest, ExpressResponse } from 'src/Modules';
 import { ResourceMethod } from './';
 import { ApiError } from './Errors';
 export interface ResourceMethodConfig
 {
-	callback: Callback;
-	/** Authentication is evaluated only if provided in request. */
-	optional?: boolean;
+	/**
+		true: Authentication required and evaluated
+		false: Authentication ignored
+		'optional': Authentication is evaluated only if provided in request
+	*/
+	authenticate?: boolean | 'optional';
 };
 export type Callback = ({method, request, response}: {method: ResourceMethod, request: ExpressRequest, response: ExpressResponse}) => CallbackPromise;
 export interface CallbackPromise extends Promise <CallbackResult> {};
@@ -29,10 +28,11 @@ export default async function authenticate({method, request, response, next}: {m
 		next();
 		return;
 	};
+	if (!request.app.locals.config.authenticate) throw new AuthenticateCallbackUnavailableError();
 	let result: CallbackResult;
 	try
 	{
-		result = await method.authenticate.callback({method, request, response});
+		result = await request.app.locals.config.authenticate({method, request, response});
 	}
 	catch (error)
 	{
@@ -46,4 +46,13 @@ export default async function authenticate({method, request, response, next}: {m
 	};
 	response.locals.authentication = result.data;
 	next();
+};
+
+export class AuthenticateCallbackUnavailableError extends Error
+{
+	constructor()
+	{
+		const message = 'Resource method sought authentication, but no authentication callback is available.';
+		super(message);
+	};
 };

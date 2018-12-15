@@ -29,9 +29,17 @@ import
 	Application as GenericExpressApplication,
 	Router as ExpressRouter,
 	IRoute as ExpressRoute,
-	Request as ExpressRequest,
-	Response as ExpressResponse
+	Request as GenericExpressRequest,
+	Response as GenericExpressResponse
 } from 'express';
+export interface ExpressRequest extends GenericExpressRequest
+{
+	app: ExpressApplication;
+};
+export interface ExpressResponse extends GenericExpressResponse
+{
+	app: ExpressApplication;
+};
 // Resource
 export type Resources =
 {
@@ -60,10 +68,9 @@ export type ResourceMethods =
 {
 	[MethodName in ResourceMethodNameUpperCase]?: ResourceMethod <MethodName>
 };
-export interface ResourceMethod <GenericMethodName = ResourceMethodNameUpperCase>
+export interface ResourceMethod <GenericMethodName = ResourceMethodNameUpperCase> extends ResourceMethodAuthenticate
 {
 	name?: GenericMethodName;
-	authenticate?: ResourceMethodAuthenticate;
 	schema?: Schema;
 	pluck?: Pluck.Variant;
 	handler: ResourceMethodHandler;
@@ -96,10 +103,13 @@ export interface ExpressApplicationLocals
 {
 	config: Config;
 };
+// Config
+import { Callback as AuthenticationCallback } from './Authenticate';
 export interface Config
 {
 	port: number;
 	resources: Resources;
+	authenticate?: AuthenticationCallback;
 	root?: string;
 	debug?: Debug;
 };
