@@ -26,21 +26,17 @@ declare module '@bluecewe/rest-server'
     export interface ResourceMethod <GenericMethodName = ResourceMethodNameUpperCase>
     {
     	name?: GenericMethodName;
-    	authenticate?: ResourceMethodAuthenticate;
+        /**
+    		true: Authentication required and evaluated
+    		false: Authentication ignored
+    		'optional': Authentication is evaluated only if provided in request
+    	*/
+    	authenticate?: boolean | 'optional';
     	schema?: Schema;
     	pluck?: Pluck.Variant;
     	handler: ResourceMethodHandler;
     }
     type ResourceMethodNameUpperCase = 'GET' | 'POST' | 'PATCH' | 'DELETE';
-    export interface ResourceMethodAuthenticate
-    {
-        callback: Callback;
-    	/** Authentication is evaluated only if provided in request. */
-    	optional?: boolean;
-    }
-    export type Callback = ({method, request, response}: {method: ResourceMethod, request: ExpressRequest, response: ExpressResponse}) => CallbackPromise;
-    export interface CallbackPromise extends Promise <CallbackResult> {}
-    export type CallbackResult = { data: object } | { error: ApiError };
     export interface Schema
     {
     	[key: string]: any;
@@ -71,9 +67,13 @@ declare module '@bluecewe/rest-server'
     {
     	port: number;
     	resources: Resources;
+        authentication?: AuthenticationCallback;
     	root?: string;
     	debug?: Debug;
     }
+    export type AuthenticationCallback = ({method, request, response}: {method: ResourceMethod, request: ExpressRequest, response: ExpressResponse}) => AuthenticationCallbackPromise;
+    export interface AuthenticationCallbackPromise extends Promise <AuthenticationCallbackResult> {}
+    export type AuthenticationCallbackResult = { data: object } | { error: ApiError };
     export interface Debug
     {
     	paths?: boolean;
