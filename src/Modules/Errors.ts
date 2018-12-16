@@ -115,6 +115,23 @@ export class NotFound extends ApiError
 	};
 };
 
+export class BearerTokenMissing extends ApiError
+{
+	static generate()
+	{
+		return new this();
+	};
+	constructor()
+	{
+		const parameters: ApiErrorParameters =
+		{
+			code: 'bearerTokenMissing',
+			status: 400
+		};
+		super(parameters);
+	};
+};
+
 /** A generic API error for when a user is unauthorised for something. */
 export class UnauthorisedError extends ApiError
 {

@@ -73,7 +73,7 @@ declare module '@bluecewe/rest-server'
     }
     export type AuthenticationCallback = ({method, request, response}: {method: ResourceMethod, request: ExpressRequest, response: ExpressResponse}) => AuthenticationCallbackPromise;
     export interface AuthenticationCallbackPromise extends Promise <AuthenticationCallbackResult> {}
-    export type AuthenticationCallbackResult = { data: object } | { error: ApiError };
+    export type AuthenticationCallbackResult = { data: object } | { unprovided: true } | { error: ApiError };
     export interface Debug
     {
     	paths?: boolean;
