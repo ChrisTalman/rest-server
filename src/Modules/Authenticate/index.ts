@@ -65,12 +65,12 @@ export default async function authenticate({method, request, response, next}: {m
 			bearer = bearerResult;
 		};
 	};
+	const paramaters: CallbackParameters = { method, request, response };
+	if (bearer) paramaters.bearerToken = bearer;
+	const callback = typeof appAuthentication === 'function' ? appAuthentication : appAuthentication.callback;
 	let result: CallbackResult;
 	try
 	{
-		const paramaters: CallbackParameters = { method, request, response };
-		if (bearer) paramaters.bearerToken = bearer;
-		const callback = typeof appAuthentication === 'function' ? appAuthentication : appAuthentication.callback;
 		result = await callback(paramaters);
 	}
 	catch (error)
