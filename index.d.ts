@@ -1,6 +1,6 @@
 /// <reference types="express" />
 
-import { Request as ExpressRequest, Response as ExpressResponse } from 'express';
+import { Request as ExpressRequest, Response as GenericExpressResponse } from 'express';
 
 declare module '@bluecewe/rest-server'
 {
@@ -101,4 +101,23 @@ declare module '@bluecewe/rest-server'
     // Utilities
     export function handleResourceSuccess({response, json}: {response: ExpressResponse, json?: any}): void;
     export function handleResourceError({response, apiError, error, status}: {response: ExpressResponse, apiError?: ApiError, error?: Error, status?: number}): void;
+    // Express
+    export interface ExpressResponse extends GenericExpressResponse
+    {
+        locals: ExpressLocals;
+    }
+    export interface ExpressLocals
+    {
+        authentication?: object;
+    	resourceData?: object;
+    	parameters?: object;
+    	pluck?: ExpressResponsePluck;
+    }
+    export interface ExpressResponsePluck
+    {
+    	/** The original parsed value of the pluck. */
+    	parsed: object;
+    	/** The RethinkDB-compatabile value of the pluck. */
+    	rethink: Array<any> | {[key: string]: any};
+    }
 }
