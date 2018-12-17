@@ -104,12 +104,12 @@ export interface ExpressApplicationLocals
 	config: Config;
 };
 // Config
-import { Callback as AuthenticationCallback } from './Authenticate';
+import { AppConfigVariant as AuthenticationAppConfig } from './Authenticate';
 export interface Config
 {
 	port: number;
 	resources: Resources;
-	authenticate?: AuthenticationCallback;
+	authenticate?: AuthenticationAppConfig;
 	root?: string;
 	debug?: Debug;
 };

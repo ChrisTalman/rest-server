@@ -67,9 +67,19 @@ declare module '@bluecewe/rest-server'
     {
     	port: number;
     	resources: Resources;
-        authentication?: AuthenticationCallback;
+        authentication?: AuthenticationConfigVariant;
     	root?: string;
     	debug?: Debug;
+    }
+    export type AuthenticationConfigVariant = AuthenticationCallback | AuthenticationConfig;
+    export interface AuthenticationConfig
+    {
+    	callback: AuthenticationCallback;
+    	/**
+    		'bearer': Authentication is required in form of RFC 6750 Bearer token
+    		'bearer-optional': Same as 'bearer', but only evaluated by callback if token is provided in request
+    	*/
+    	helper?: 'bearer' | 'bearer-optional';
     }
     export type AuthenticationCallback = ({method, request, response}: {method: ResourceMethod, request: ExpressRequest, response: ExpressResponse}) => AuthenticationCallbackPromise;
     export interface AuthenticationCallbackPromise extends Promise <AuthenticationCallbackResult> {}

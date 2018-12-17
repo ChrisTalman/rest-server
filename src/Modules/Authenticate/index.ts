@@ -9,6 +9,16 @@ import getBearerToken from './getBearerToken';
 import { NextFunction as ExpressNextFunction } from 'express';
 import { ExpressRequest, ExpressResponse, ResourceMethod } from 'src/Modules';
 import { ApiError } from 'src/Modules/Errors';
+export type AppConfigVariant = Callback | AppConfig;
+export interface AppConfig
+{
+	callback: Callback;
+	/**
+		'bearer': Authentication is required in form of RFC 6750 Bearer token
+		'bearer-optional': Same as 'bearer', but only evaluated by callback if token is provided in request
+	*/
+	helper?: 'bearer' | 'bearer-optional';
+};
 export interface ResourceMethodConfig
 {
 	/**
@@ -22,10 +32,10 @@ export interface ResourceMethodConfig
 export type Callback = ({method, request, response, bearerToken}: CallbackParameters) => CallbackPromise;
 export interface CallbackParameters
 {
-	method: ResourceMethod,
-	request: ExpressRequest,
-	response: ExpressResponse,
-	bearerToken?: string
+	method: ResourceMethod;
+	request: ExpressRequest;
+	response: ExpressResponse;
+	bearerToken?: string;
 };
 export interface CallbackPromise extends Promise <CallbackResult> {};
 export type CallbackResult = { data: object } | { ignore: true } | { error: ApiError };
@@ -37,9 +47,11 @@ export default async function authenticate({method, request, response, next}: {m
 		next();
 		return;
 	};
-	if (!request.app.locals.config.authenticate) throw new AuthenticateCallbackUnavailableError();
+	const appAuthentication = request.app.locals.config.authenticate;
+	if (!appAuthentication) throw new AuthenticateCallbackUnavailableError();
+	const appAuthenticationHelper = getAuthenticationHelper({method, request});
 	let bearer: string;
-	if (method.authenticate === 'bearer' || method.authenticate === 'bearer-optional')
+	if (appAuthenticationHelper === 'bearer' || appAuthenticationHelper === 'bearer-optional')
 	{
 		const bearerResult = getBearerToken(request);
 		if (typeof bearerResult === 'object')
@@ -58,7 +70,8 @@ export default async function authenticate({method, request, response, next}: {m
 	{
 		const paramaters: CallbackParameters = { method, request, response };
 		if (bearer) paramaters.bearerToken = bearer;
-		result = await request.app.locals.config.authenticate(paramaters);
+		const callback = typeof appAuthentication === 'function' ? appAuthentication : appAuthentication.callback;
+		result = await callback(paramaters);
 	}
 	catch (error)
 	{
@@ -88,4 +101,12 @@ export class AuthenticateCallbackUnavailableError extends Error
 		const message = 'Resource method sought authentication, but no authentication callback is available.';
 		super(message);
 	};
+};
+
+function getAuthenticationHelper({method, request}: {method: ResourceMethod, request: ExpressRequest})
+{
+	if (method.authenticate === 'bearer' || method.authenticate === 'bearer-optional') return method.authenticate;
+	const authentication = request.app.locals.config.authenticate;
+	if (typeof authentication === 'object' && (authentication.helper === 'bearer' || authentication.helper === 'bearer-optional')) return authentication.helper;
+	return;
 };
