@@ -89,7 +89,7 @@ declare module '@bluecewe/rest-server'
     	paths?: boolean;
     }
     /** Represents API error. */
-    class ApiError
+    export class ApiError
     {
     	public code: string;
     	public status: number;
