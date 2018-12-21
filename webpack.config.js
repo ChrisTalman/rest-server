@@ -27,7 +27,8 @@ module.exports =
     output:
     {
         filename: '[name].js',
-        path: Path.resolve(__dirname, './')
+        path: Path.resolve(__dirname, './'),
+        libraryTarget: 'umd'
     },
     watch: true,
     module:
