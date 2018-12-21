@@ -19,6 +19,7 @@ import validate from './Validate';
 import validatePluck from './ValidatePluck';
 import handleResourceMethodParameter from './Retrieve';
 import * as Errors from './Errors';
+export { Errors };
 import { handleResourceError } from './Utilities';
 export * from './Utilities';
 
