@@ -25,7 +25,7 @@ const RESOURCE_SCHEMA =
 	methods: Joi.object().pattern(/(?:GET|POST|PATCH|DELETE)/, RESOURCE_METHOD_SCHEMA).default({}),
 	resources: Joi.object().pattern(/.+/, Joi.lazy(() => Joi.object(RESOURCE_SCHEMA))).default({})
 };
-const AUTHENTICATE_SCHEMA =
+const AUTHENTICATION_SCHEMA =
 {
 	callback: Joi.func().required(),
 	helper: Joi.valid('bearer', 'bearer-optional').optional()
@@ -46,7 +46,7 @@ const SCHEMA = Joi.object
     {
         port: Joi.number().required(),
         resources: Joi.object().pattern(/.+/, RESOURCE_SCHEMA).default({}),
-		authenticate: Joi.alternatives(Joi.func(), AUTHENTICATE_SCHEMA).optional(),
+		authentication: Joi.alternatives(Joi.func(), AUTHENTICATION_SCHEMA).optional(),
 		root: Joi.string().default('/'),
 		debug: DEBUG_SCHEMA
     }

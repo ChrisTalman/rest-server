@@ -47,7 +47,7 @@ export default async function authenticate({method, request, response, next}: {m
 		next();
 		return;
 	};
-	const appAuthentication = request.app.locals.config.authenticate;
+	const appAuthentication = request.app.locals.config.authentication;
 	if (!appAuthentication) throw new AuthenticateCallbackUnavailableError();
 	const appAuthenticationHelper = getAuthenticationHelper({method, request});
 	let bearer: string;
@@ -106,7 +106,7 @@ export class AuthenticateCallbackUnavailableError extends Error
 function getAuthenticationHelper({method, request}: {method: ResourceMethod, request: ExpressRequest})
 {
 	if (method.authenticate === 'bearer' || method.authenticate === 'bearer-optional') return method.authenticate;
-	const authentication = request.app.locals.config.authenticate;
+	const authentication = request.app.locals.config.authentication;
 	if (typeof authentication === 'object' && (authentication.helper === 'bearer' || authentication.helper === 'bearer-optional')) return authentication.helper;
 	return;
 };

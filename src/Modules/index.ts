@@ -111,7 +111,7 @@ export interface Config
 {
 	port: number;
 	resources: Resources;
-	authenticate?: AuthenticationAppConfig;
+	authentication?: AuthenticationAppConfig;
 	root?: string;
 	debug?: Debug;
 };
