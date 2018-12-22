@@ -13,7 +13,7 @@ import { Config } from './';
 const RESOURCE_METHOD_SCHEMA =
 {
 	name: Joi.valid('GET', 'POST', 'PATCH', 'DELETE').optional(),
-	schema: (Joi.object() as any).schema().optional(),
+	schema: Joi.alternatives(Joi.object(), (Joi.object() as any).schema()).optional(),
 	pluck: Joi.object().optional(),
 	authenticate: Joi.valid(Joi.boolean(), 'bearer', 'bearer-optional'),
 	handler: Joi.func().required()
