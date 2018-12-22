@@ -26,7 +26,8 @@
 		"webpack-node-externals": "1.7.2"
 	},
 	"scripts": {
-		"build": "./node_modules/.bin/webpack"
+		"build": "./node_modules/.bin/webpack",
+		"start-dev": "node --inspect ./Tests/index.js"
 	},
 	"types": "./index.d.ts"
 }
