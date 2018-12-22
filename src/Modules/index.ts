@@ -14,6 +14,7 @@ import Cors from 'cors';
 import Joi from 'joi';
 
 // Internal Modules
+import validateConfig from './ValidateConfig';
 import authenticate from './Authenticate';
 import validate from './Validate';
 import validatePluck from './ValidatePluck';
@@ -121,6 +122,7 @@ export interface Debug
 
 export default function initialise(config: Config)
 {
+	config = validateConfig(config);
 	const app: ExpressApplication = Express();
 	app.locals.config = config;
 	initialiseExpress(app);
@@ -310,4 +312,12 @@ function listenExpressHttp(app: ExpressApplication)
 	const httpServer = new HTTP.Server(app);
 	httpServer.listen(app.locals.config.port);
 	console.log('Listening on port ' + app.locals.config.port + ' at \'' + app.locals.config.root + '\'.');
+};
+
+export class RestServerError extends Error
+{
+	constructor(message: string)
+	{
+		super(message);
+	};
 };
