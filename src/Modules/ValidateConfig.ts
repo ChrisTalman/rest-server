@@ -23,7 +23,7 @@ const RESOURCE_SCHEMA =
     name: Joi.string().optional(),
 	retrieve: Joi.func().optional(),
 	methods: Joi.object().pattern(/(?:GET|POST|PATCH|DELETE)/, RESOURCE_METHOD_SCHEMA).default({}),
-	resources: Joi.object().pattern(/.+/, Joi.lazy(() => RESOURCE_SCHEMA)).default({})
+	resources: Joi.object().pattern(/.+/, Joi.lazy(() => Joi.object(RESOURCE_SCHEMA))).default({})
 };
 const AUTHENTICATE_SCHEMA =
 {
