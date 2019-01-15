@@ -27,11 +27,12 @@ declare module '@bluecewe/rest-server'
     {
     	name?: GenericMethodName;
         /**
-    		true: Authentication required and evaluated
-    		false: Authentication ignored
-    		'optional': Authentication is evaluated only if provided in request
+            true: Authentication required and evaluated by callback
+            false: Authentication ignored
+            'bearer': Authentication is required in form of RFC 6750 Bearer token
+            'bearer-optional': Same as 'bearer', but only evaluated by callback if token is provided in request
     	*/
-    	authenticate?: boolean | 'optional';
+    	authenticate?: boolean | 'bearer' | 'bearer-optional';
     	schema?: Schema;
     	pluck?: Pluck.Variant;
     	handler: ResourceMethodHandler;

@@ -15,7 +15,11 @@ const RESOURCE_METHOD_SCHEMA =
 	name: Joi.valid('GET', 'POST', 'PATCH', 'DELETE').optional(),
 	schema: Joi.alternatives(Joi.object(), (Joi.object() as any).schema()).optional(),
 	pluck: Joi.object().optional(),
-	authenticate: Joi.valid(Joi.boolean(), 'bearer', 'bearer-optional'),
+	authenticate: Joi.alternatives
+		(
+			Joi.boolean(),
+			Joi.valid('bearer', 'bearer-optional')
+		),
 	handler: Joi.func().required()
 };
 const RESOURCE_SCHEMA =
