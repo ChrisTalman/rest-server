@@ -83,14 +83,23 @@ export default async function authenticate({method, request, response, next}: {m
 	{
 		handleResourceError({response, apiError: result.error});
 		return;
-	};
+	}
 	// Ignore authentication
-	if ('ignore' in result)
+	else if ('ignore' in result)
 	{
 		next();
 		return;
+	}
+	else if ('data' in result)
+	{
+		response.locals.authentication = result.data;
+	}
+	else
+	{
+		const error = new AuthenticateCallbackResultError();
+		handleResourceError({response, error});
+		return;
 	};
-	response.locals.authentication = result.data;
 	next();
 };
 
@@ -99,6 +108,15 @@ export class AuthenticateCallbackUnavailableError extends Error
 	constructor()
 	{
 		const message = 'Resource method sought authentication, but no authentication callback is available.';
+		super(message);
+	};
+};
+
+export class AuthenticateCallbackResultError extends Error
+{
+	constructor()
+	{
+		const message = 'Result did not contain any valid properties.';
 		super(message);
 	};
 };
