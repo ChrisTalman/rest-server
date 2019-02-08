@@ -50,12 +50,7 @@ declare module '@bluecewe/rest-server'
     		[field: string]: Variant | boolean;
     	}
     }
-    export type ResourceMethodHandler = (parameters: ResourceMethodHandlerParameters) => void;
-    export interface ResourceMethodHandlerParameters <GenericRequest extends ExpressRequest = ExpressRequest, GenericResponse extends ExpressResponse = ExpressResponse>
-    {
-    	request: GenericRequest;
-    	response: GenericResponse;
-    }
+    export type ResourceMethodHandler = ({request, response}: {request?: ExpressRequest, response?: ExpressResponse}) => void;
     // Resource Retrieve
     export type ResourceRetrieve = (parameters: RetrieveParameters <any, any>) => Promise<ResourceRetrieveValue>;
     export interface RetrieveParameters <GenericRequest extends ExpressRequest, GenericResponse extends ExpressResponse>
