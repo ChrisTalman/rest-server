@@ -10,11 +10,17 @@ import { RestServerError } from './';
 import { Config } from './';
 
 // Constants
+const PLUCK_SCHEMA = Joi
+	.alternatives
+	(
+		Joi.array().items(Joi.string(), Joi.lazy(() => PLUCK_SCHEMA)),
+		Joi.object().pattern(/.+/, Joi.alternatives(Joi.boolean(), Joi.lazy(() => PLUCK_SCHEMA)))
+	);
 const RESOURCE_METHOD_SCHEMA =
 {
 	name: Joi.valid('GET', 'POST', 'PATCH', 'DELETE').optional(),
 	schema: Joi.alternatives(Joi.object(), (Joi.object() as any).schema()).optional(),
-	pluck: Joi.object().optional(),
+	pluck: PLUCK_SCHEMA.optional(),
 	authenticate: Joi.alternatives
 		(
 			Joi.boolean(),
