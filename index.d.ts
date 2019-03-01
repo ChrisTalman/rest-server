@@ -1,11 +1,23 @@
+/// <reference types="node" />
 /// <reference types="express" />
 
-import { Request as ExpressRequest, Response as GenericExpressResponse } from 'express';
+// Types
+import { Server as HttpServer } from 'http';
+import { Application as ExpressApplication, Request as ExpressRequest, Response as GenericExpressResponse } from 'express';
 
 declare module '@bluecewe/rest-server'
 {
     // Initialise
-    export default function initialise(config: Config): void;
+    export default class RestServer
+    {
+    	public readonly config: Config;
+    	public readonly app: ExpressApplication;
+    	public readonly httpServer: HttpServer;
+    	/** Constructs instance. */
+    	constructor(config: Config);
+    	/** Closes HTTP server socket, preventing new requests. Promise resolves once all active connections have gracefully closed. */
+    	public stop(): Promise<void>;
+    }
     export interface Resources
     {
     	[name: string]: Resource;

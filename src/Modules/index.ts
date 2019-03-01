@@ -25,6 +25,7 @@ import { handleResourceError } from './Utilities';
 export * from './Utilities';
 
 // Types
+import { Server as HttpServer } from 'http';
 import
 {
 	IRouterHandler as ExpressRouteHandler,
@@ -120,14 +121,29 @@ export interface Debug
 	paths?: boolean;
 };
 
-export default function initialise(config: Config)
+export default class RestServer
 {
-	config = validateConfig(config);
-	const app: ExpressApplication = Express();
-	app.locals.config = config;
-	initialiseExpress(app);
-	initialiseResources(app);
-	listenExpressHttp(app);
+	public readonly config: Config;
+	public readonly app: ExpressApplication;
+	public readonly httpServer: HttpServer;
+	/** Constructs instance. */
+	constructor(config: Config)
+	{
+		this.config = validateConfig(config);
+		this.app = Express();
+		this.app.locals.config = config;
+		initialiseExpress(this.app);
+		initialiseResources(this.app);
+		this.httpServer = listenExpressHttp(this.app);
+	};
+	/** Closes HTTP server socket, preventing new requests. Promise resolves once all active connections have gracefully closed. */
+	public stop()
+	{
+		let resolvePromise: () => void;
+		const promise = new Promise<void>(resolve => resolvePromise = resolve);
+		this.httpServer.close(() => resolvePromise());
+		return promise;
+	};
 };
 
 /** Initialises the given Express app. */
@@ -312,6 +328,7 @@ function listenExpressHttp(app: ExpressApplication)
 	const httpServer = new HTTP.Server(app);
 	httpServer.listen(app.locals.config.port);
 	console.log('Listening on port ' + app.locals.config.port + ' at \'' + app.locals.config.root + '\'.');
+	return httpServer;
 };
 
 export class RestServerError extends Error
