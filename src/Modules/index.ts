@@ -57,6 +57,11 @@ export interface Resource <GenericName = string>
 	methods?: ResourceMethods;
 	resources?: Resources;
 };
+export interface TransformedResources extends Array<TransformedResource> {};
+export interface TransformedResource extends Resource
+{
+	name: string;
+};
 // Resource Retrieve
 export type ResourceRetrieve = (parameters: RetrieveParameters <any, any>) => Promise<ResourceRetrieveValue>;
 export interface RetrieveParameters <GenericRequest extends ExpressRequest, GenericResponse extends ExpressResponse>
@@ -161,17 +166,18 @@ function initialiseExpress(app: ExpressApplication)
 function initialiseResources(app: ExpressApplication)
 {
 	const router = Express.Router();
-	for (let resource of Object.entries(app.locals.config.resources))
+	for (let { 0: name, 1: resource } of Object.entries(app.locals.config.resources) as Array<[string, Resource]>)
 	{
-		initialiseResource({name: resource[0], resource: resource[1], router, path: '', resourceAncestors: []});
+		initialiseResource({name, resource, router, path: '', resourceAncestors: []});
 	};
 	app.use(app.locals.config.root, router);
 	listenResourceNotFound(app);
 };
 
-function initialiseResource({name, resource, router, path, resourceAncestors}: {name: string, resource: Resource, router: ExpressRouter, path: string, resourceAncestors: ResourcesArray})
+function initialiseResource({name, resource: rawResource, router, path, resourceAncestors}: {name: string, resource: Resource, router: ExpressRouter, path: string, resourceAncestors: ResourcesArray})
 {
-	if (typeof resource.name === 'string' && resource.name !== name) throw new ResourceNameMismatch({name, resource});
+	if (typeof rawResource.name === 'string' && rawResource.name !== name) throw new ResourceNameMismatch({name, resource: rawResource});
+	const resource = rawResource as TransformedResource;
 	resource.name = name;
 	path += '/' + resource.name;
 	resourceAncestors = augmentAncestors({resource, ancestors: resourceAncestors});
@@ -190,7 +196,7 @@ class ResourceNameMismatch extends Error
 };
 
 /** Creates new array, in which existing resources are first added, and then the newest resource at the end. */
-function augmentAncestors({resource, ancestors}: {resource: Resource, ancestors: ResourcesArray})
+function augmentAncestors({resource, ancestors}: {resource: TransformedResource, ancestors: ResourcesArray})
 {
 	const augmented: ResourcesArray = [];
 	augmented.push(... ancestors, resource);
@@ -207,7 +213,7 @@ function logPath({resource, path, router}: {resource: Resource, path: string, ro
 	console.log(pathLog);
 };
 
-function initialiseResourceMiddleware(resource: Resource, router: ExpressRouter, path: string, resourceAncestors: ResourcesArray)
+function initialiseResourceMiddleware(resource: TransformedResource, router: ExpressRouter, path: string, resourceAncestors: ResourcesArray)
 {
 	const route = router.route(path);
 	initialiseResourceMethods(resource, route, resourceAncestors);
@@ -219,7 +225,7 @@ function initialiseResourceMethods(resource: Resource, route: ExpressRoute, reso
 	if (!resource.methods) return;
 	for (let methodName of Object.keys(resource.methods) as Array<ResourceMethodNameUpperCase>)
 	{
-		const method = resource.methods[methodName];
+		const method = resource.methods[methodName] as ResourceMethod;
 		initialiseResourceMethod(methodName, method, route, resourceAncestors);
 	};
 };
@@ -304,15 +310,15 @@ function handleResourceMethodUnavailable({response}: ResourceMethodHandlerParame
 	response.sendStatus(405);
 };
 
-function initialiseSubresources(resource: Resource, router: ExpressRouter, path: string, resourceAncestors: ResourcesArray)
+function initialiseSubresources(resource: TransformedResource, router: ExpressRouter, path: string, resourceAncestors: ResourcesArray)
 {
 	if (!resource.resources)
 	{
 		return;
 	};
-	for (let subresource of Object.entries(resource.resources))
+	for (let { 0: name, 1: subresource } of (Object.entries(resource.resources) as Array<[string, Resource]>))
 	{
-		initialiseResource({name: subresource[0], resource: subresource[1], router, path, resourceAncestors});
+		initialiseResource({name, resource: subresource, router, path, resourceAncestors});
 	};
 };
 

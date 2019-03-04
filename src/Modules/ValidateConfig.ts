@@ -7,7 +7,7 @@ import Joi from 'joi';
 import { RestServerError } from './';
 
 // Types
-import { Config } from './';
+import { Config, ValidatedConfig } from './';
 
 // Constants
 const PLUCK_SCHEMA = Joi
@@ -51,21 +51,19 @@ const DEBUG_SCHEMA = Joi.object
 		}
 	)
 	.default(DEBUG_DEFAULT);
-const SCHEMA = Joi.object
-(
-    {
-        port: Joi.number().required(),
-        resources: Joi.object().pattern(/.+/, RESOURCE_SCHEMA).default({}),
-		authentication: Joi.alternatives(Joi.func(), AUTHENTICATION_SCHEMA).optional(),
-		root: Joi.string().default('/'),
-		debug: DEBUG_SCHEMA
-    }
-);
+const SCHEMA =
+{
+    port: Joi.number().required(),
+    resources: Joi.object().pattern(/.+/, RESOURCE_SCHEMA).default({}),
+	authentication: Joi.alternatives(Joi.func(), AUTHENTICATION_SCHEMA).optional(),
+	root: Joi.string().default('/'),
+	debug: DEBUG_SCHEMA
+};
 
 export default function(config: Config)
 {
 	const valid = Joi.validate(config, SCHEMA);
 	if (valid.error) throw new RestServerError(valid.error.message);
-	const validated = valid.value;
+	const validated = valid.value as ValidatedConfig;
 	return validated;
 };

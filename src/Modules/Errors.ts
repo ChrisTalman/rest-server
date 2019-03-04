@@ -5,7 +5,7 @@
 // To Do: Provide 'entity not found' error for when an entity provided in request parameters cannot be found. In particular, the error should indicate which parameter failed, because requests can be complex with multiple parameters referencing the same entity type. For instance, two or more parameters might reference an Enjin user ID, and one might fail, which should be clearly indicated, much like how Joi clearly indicates which part of the schema failed.
 
 // Types
-import { Resource } from './';
+import { TransformedResource } from './';
 
 /** Represents API error. */
 export class ApiError
@@ -87,11 +87,11 @@ export class InvalidBody extends ApiError
 export class NotFound extends ApiError
 {
 	private resourceName: string;
-	static generate(resource: Resource | string)
+	static generate(resource: TransformedResource | string)
 	{
 		return new this(resource);
 	};
-	constructor(resource: Resource | string)
+	constructor(resource: TransformedResource | string)
 	{
 		const resourceName = typeof resource === 'string' ? resource : resource.name.substring(1);
 		const parameters: ApiErrorParameters =

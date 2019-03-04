@@ -7,11 +7,11 @@ import { NotFound } from 'src/Modules/Errors';
 // Types
 import { Request as ExpressRequest, Response as ExpressResponse, NextFunction as ExpressNextFunction } from 'express';
 import { ResourceRetrieveValue } from 'src/Modules';
-import { Resource, ResourcesArray } from './';
+import { TransformedResource, ResourcesArray, ResourceRetrieve } from './';
 
 export default async function({resourceAncestors, request, response, next}: {resourceAncestors: ResourcesArray, request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction})
 {
-	const promises = resourceAncestors.map(resource => retrieveParameter({resource, request, response}));
+	const promises = resourceAncestors.map(resource => retrieveParameter({resource: resource as TransformedResource, request, response}));
 	const results = await Promise.all(promises);
 	const success = results.every(result => result === true);
 	if (!success) return;
@@ -22,13 +22,13 @@ export default async function({resourceAncestors, request, response, next}: {res
 	If resource is a parameter, attempts to retrieve its data and expose in response.locals object.
 	Returns true if it succeeds, or resource is not a parameter. Otherwise, returns undefined.
 */
-async function retrieveParameter({resource, request, response}: {resource: Resource, request: ExpressRequest, response: ExpressResponse})
+async function retrieveParameter({resource, request, response}: {resource: TransformedResource, request: ExpressRequest, response: ExpressResponse})
 {
 	if (!isParameter({resource})) return true;
 	let data: ResourceRetrieveValue;
 	try
 	{
-		data = await resource.retrieve({request, response});
+		data = await (resource.retrieve as ResourceRetrieve)({request, response});
 	}
 	catch (error)
 	{
@@ -53,7 +53,7 @@ async function retrieveParameter({resource, request, response}: {resource: Resou
 	return true;
 };
 
-function augmentLocals(resource: Resource, response: ExpressResponse, data: object)
+function augmentLocals(resource: TransformedResource, response: ExpressResponse, data: object)
 {
 	const resourceNameWithoutColon = resource.name.substring(1);
 	const resourceData = response.locals.resourceData || {};
@@ -61,8 +61,8 @@ function augmentLocals(resource: Resource, response: ExpressResponse, data: obje
 	response.locals.resourceData = resourceData;
 };
 
-function isParameter({resource}: {resource: Resource})
+function isParameter({resource}: {resource: TransformedResource})
 {
-	const is = resource.name[0] === ':' && 'retrieve' in resource;
+	const is = resource.name[0] === ':' && typeof resource.retrieve === 'function';
 	return is;
 };

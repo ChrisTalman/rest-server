@@ -50,7 +50,7 @@ export default async function authenticate({method, request, response, next}: {m
 	const appAuthentication = request.app.locals.config.authentication;
 	if (!appAuthentication) throw new AuthenticateCallbackUnavailableError();
 	const appAuthenticationHelper = getAuthenticationHelper({method, request});
-	let bearer: string;
+	let bearer = undefined as any as string;
 	if (appAuthenticationHelper === 'bearer' || appAuthenticationHelper === 'bearer-optional')
 	{
 		const bearerResult = getBearerToken(request);
