@@ -104,7 +104,7 @@ export interface ExpressApplication extends GenericExpressApplication
 };
 export interface ExpressApplicationLocals
 {
-	config: Config;
+	config: ValidatedConfig;
 };
 // Config
 import { AppConfigVariant as AuthenticationAppConfig } from './Authenticate';
@@ -120,18 +120,22 @@ export interface Debug
 {
 	paths?: boolean;
 };
+export interface ValidatedConfig extends Config
+{
+	root: string;
+};
 
 export default class RestServer
 {
-	public readonly config: Config;
+	public readonly config: ValidatedConfig;
 	public readonly app: ExpressApplication;
 	public readonly httpServer: HttpServer;
 	/** Constructs instance. */
-	constructor(config: Config)
+	constructor(rawConfig: Config)
 	{
-		this.config = validateConfig(config);
+		this.config = validateConfig(rawConfig);
 		this.app = Express();
-		this.app.locals.config = config;
+		this.app.locals.config = this.config;
 		initialiseExpress(this.app);
 		initialiseResources(this.app);
 		this.httpServer = listenExpressHttp(this.app);

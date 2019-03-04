@@ -10,7 +10,7 @@ declare module '@bluecewe/rest-server'
     // Initialise
     export default class RestServer
     {
-    	public readonly config: Config;
+    	public readonly config: ValidatedConfig;
     	public readonly app: ExpressApplication;
     	public readonly httpServer: HttpServer;
     	/** Constructs instance. */
@@ -78,6 +78,10 @@ declare module '@bluecewe/rest-server'
         authentication?: AuthenticationConfigVariant;
     	root?: string;
     	debug?: Debug;
+    }
+    export interface ValidatedConfig extends Config
+    {
+    	root: string;
     }
     export type AuthenticationConfigVariant = AuthenticationCallback | AuthenticationConfig;
     export interface AuthenticationConfig
