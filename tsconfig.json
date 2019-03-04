@@ -12,6 +12,7 @@
         "removeComments": true,
         "downlevelIteration": true,
         "alwaysStrict": true,
+		"strictNullChecks": true,
 		"allowSyntheticDefaultImports": true,
         "watch": true
     },
