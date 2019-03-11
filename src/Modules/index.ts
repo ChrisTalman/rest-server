@@ -20,6 +20,7 @@ import validate from './Validate';
 import validatePluck from './ValidatePluck';
 import handleResourceMethodParameter from './Retrieve';
 import * as Errors from './Errors';
+import { resourceMethodUnavailable, jsonInvalid } from './Errors';
 export * from './Errors';
 import { handleResourceError } from './Utilities';
 export * from './Utilities';
@@ -39,6 +40,8 @@ import
 export interface ExpressRequest extends GenericExpressRequest
 {
 	app: ExpressApplication;
+	rawBody?: Buffer;
+	textBody?: string;
 };
 export interface ExpressResponse extends GenericExpressResponse
 {
@@ -82,6 +85,8 @@ export interface ResourceMethod <GenericMethodName = ResourceMethodNameUpperCase
 	name?: GenericMethodName;
 	schema?: Schema;
 	pluck?: Pluck.Variant;
+	exposeRawBody?: boolean;
+	exposeTextBody?: boolean;
 	handler: ResourceMethodHandler;
 };
 type ResourceMethodNameUpperCase = 'GET' | 'POST' | 'PATCH' | 'DELETE';
@@ -160,7 +165,6 @@ export default class RestServer
 /** Initialises the given Express app. */
 function initialiseExpress(app: ExpressApplication)
 {
-	app.use(BodyParser.json());
 	app.use(Cors());
 };
 
@@ -197,6 +201,7 @@ function initialiseResource({name, resource: rawResource, router, path, resource
 	path += '/' + resource.name;
 	resourceAncestors = augmentAncestors({resource, ancestors: resourceAncestors});
 	logPath({resource, path, router});
+	initialiseRouterParser({resource, router});
 	initialiseResourceMiddleware(resource, router, path, resourceAncestors);
 	initialiseSubresources(resource, router, path, resourceAncestors);
 };
@@ -226,6 +231,35 @@ function logPath({resource, path, router}: {resource: Resource, path: string, ro
 	const methodsLog = (methodEntries && methodEntries.length > 0) ? ' => ' + methodEntries.map(entry => entry[0]).join(' ') : '';
 	const pathLog = path + methodsLog;
 	console.log(pathLog);
+};
+
+function initialiseRouterParser({resource, router}: {resource: Resource, router: ExpressRouter})
+{
+	router.use(BodyParser.raw({type: 'application/json'}));
+	router.use((request, response, next) => handleRouterJsonParse({request, response, next, resource}));
+};
+
+function handleRouterJsonParse({request, response, next, resource}: {request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction, resource: Resource})
+{
+	const rawBody: Buffer = request.body;
+	if (!rawBody) next();
+	const textBody = rawBody.toString();
+	let body: any;
+	try
+	{
+		body = JSON.parse(textBody);
+	}
+	catch (error)
+	{
+		handleResourceError({response, apiError: jsonInvalid});
+		return;
+	};
+	const resourceMethod: ResourceMethod = resource.methods && resource.methods[request.method];
+	if (!resourceMethod) next();
+	if (resourceMethod.exposeRawBody) request.rawBody = rawBody;
+	if (resourceMethod.exposeTextBody) request.textBody = textBody;
+	request.body = body;
+	next();
 };
 
 function initialiseResourceMiddleware(resource: TransformedResource, router: ExpressRouter, path: string, resourceAncestors: ResourcesArray)
@@ -299,10 +333,7 @@ async function handleResourceMethod({request, response, method}: {request: Expre
 
 function initialiseMethodSchema(methodIdentifier: string, method: ResourceMethod, route: ExpressRoute)
 {
-	if (!method.schema)
-	{
-		return;
-	};
+	if (!method.schema) return;
 	// To Do: The Joi object might need to be validated to be a Joi object. Otherwise, it could be an Alternatives object, which would cause an exception later.
 	const baseSchema = method.schema.isJoi === true ? (method.schema as Joi.ObjectSchema) : Joi.object(method.schema);
 	const schema = baseSchema
@@ -322,15 +353,12 @@ function initialiseMethodSchema(methodIdentifier: string, method: ResourceMethod
 
 function handleResourceMethodUnavailable({response}: ResourceMethodHandlerParameters)
 {
-	response.sendStatus(405);
+	handleResourceError({response, apiError: resourceMethodUnavailable});
 };
 
 function initialiseSubresources(resource: TransformedResource, router: ExpressRouter, path: string, resourceAncestors: ResourcesArray)
 {
-	if (!resource.resources)
-	{
-		return;
-	};
+	if (!resource.resources) return;
 	for (let { 0: name, 1: subresource } of (Object.entries(resource.resources) as Array<[string, Resource]>))
 	{
 		initialiseResource({name, resource: subresource, router, path, resourceAncestors});

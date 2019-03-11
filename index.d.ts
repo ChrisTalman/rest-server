@@ -3,7 +3,7 @@
 
 // Types
 import { Server as HttpServer } from 'http';
-import { Application as ExpressApplication, Request as ExpressRequest, Response as GenericExpressResponse } from 'express';
+import { Application as ExpressApplication, Request as GenericExpressRequest, Response as GenericExpressResponse } from 'express';
 
 declare module '@bluecewe/rest-server'
 {
@@ -18,6 +18,7 @@ declare module '@bluecewe/rest-server'
     	/** Closes HTTP server socket, preventing new requests. Promise resolves once all active connections have gracefully closed. */
     	public stop(): Promise<void>;
     }
+    // Resources
     export interface Resources
     {
     	[name: string]: Resource;
@@ -47,6 +48,8 @@ declare module '@bluecewe/rest-server'
     	authenticate?: boolean | 'bearer' | 'bearer-optional';
     	schema?: Schema;
     	pluck?: Pluck.Variant;
+    	exposeRawBody?: boolean;
+    	exposeTextBody?: boolean;
     	handler: ResourceMethodHandler;
     }
     type ResourceMethodNameUpperCase = 'GET' | 'POST' | 'PATCH' | 'DELETE';
@@ -114,6 +117,11 @@ declare module '@bluecewe/rest-server'
     export function handleResourceSuccess({response, json}: {response: ExpressResponse, json?: any}): void;
     export function handleResourceError({response, apiError, error, status}: {response: ExpressResponse, apiError?: ApiError, error?: Error, status?: number}): void;
     // Express
+    export interface ExpressRequest extends GenericExpressRequest
+    {
+    	rawBody?: Buffer;
+    	textBody?: string;
+    }
     export interface ExpressResponse extends GenericExpressResponse
     {
         locals: ExpressLocals;
