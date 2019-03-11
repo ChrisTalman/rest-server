@@ -1,12 +1,12 @@
 'use strict';
 
 // Methods
-const GET = require('./Methods/Get');
+const POST = require('./Methods/POST');
 
 module.exports =
 {
 	methods:
 	{
-		GET
+		POST
 	}
 };
