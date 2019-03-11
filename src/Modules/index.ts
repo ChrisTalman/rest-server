@@ -201,7 +201,6 @@ function initialiseResource({name, resource: rawResource, router, path, resource
 	path += '/' + resource.name;
 	resourceAncestors = augmentAncestors({resource, ancestors: resourceAncestors});
 	logPath({resource, path, router});
-	initialiseRouterParser({resource, router});
 	initialiseResourceMiddleware(resource, router, path, resourceAncestors);
 	initialiseSubresources(resource, router, path, resourceAncestors);
 };
@@ -233,43 +232,6 @@ function logPath({resource, path, router}: {resource: Resource, path: string, ro
 	console.log(pathLog);
 };
 
-function initialiseRouterParser({resource, router}: {resource: Resource, router: ExpressRouter})
-{
-	router.use(BodyParser.raw({type: 'application/json'}));
-	router.use((request, response, next) => handleRouterJsonParse({request, response, next, resource}));
-};
-
-function handleRouterJsonParse({request, response, next, resource}: {request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction, resource: Resource})
-{
-	const rawBody: Buffer = request.body;
-	if (!rawBody)
-	{
-		next();
-		return;
-	};
-	const textBody = rawBody.toString();
-	let body: any;
-	try
-	{
-		body = JSON.parse(textBody);
-	}
-	catch (error)
-	{
-		handleResourceError({response, apiError: jsonInvalid});
-		return;
-	};
-	const resourceMethod: ResourceMethod = resource.methods && resource.methods[request.method];
-	if (!resourceMethod)
-	{
-		next();
-		return;
-	};
-	if (resourceMethod.exposeRawBody) request.rawBody = rawBody;
-	if (resourceMethod.exposeTextBody) request.textBody = textBody;
-	request.body = body;
-	next();
-};
-
 function initialiseResourceMiddleware(resource: TransformedResource, router: ExpressRouter, path: string, resourceAncestors: ResourcesArray)
 {
 	const route = router.route(path);
@@ -293,6 +255,7 @@ function initialiseResourceMethod(name: ResourceMethodNameUpperCase, method: Res
 	method.name = name;
 	const methodIdentifier = method.name.toLowerCase();
 	const methodHandler = route[methodIdentifier as ResourceMethodNameLowerCase].bind(route) as ExpressRouteHandler <ExpressRoute>;
+	initialiseResourceMethodParser <ExpressRoute> ({methodHandler, method});
 	methodHandler((request, response, next) => authenticate({method, request, response, next}));
 	initialiseResourceMethodParameter(methodHandler, resourceAncestors);
 	initialiseMethodSchema(methodIdentifier, method, route);
@@ -307,6 +270,37 @@ class ResourceMethodMismatch extends Error
 		const message = 'Resource method name \'' + name + '\' mismatch with method.name \'' + method.name + '\'';
 		super(message);
 	};
+};
+
+function initialiseResourceMethodParser <ExpressRoute> ({methodHandler, method}: {methodHandler: ExpressRouteHandler <ExpressRoute>, method: ResourceMethod})
+{
+	methodHandler(BodyParser.raw({type: 'application/json'}));
+	methodHandler((request, response, next) => handleResourceMethodJsonParse({request, response, next, resourceMethod: method}));
+};
+
+function handleResourceMethodJsonParse({request, response, next, resourceMethod}: {request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction, resourceMethod: ResourceMethod})
+{
+	const rawBody: Buffer = request.body;
+	if (!rawBody)
+	{
+		next();
+		return;
+	};
+	const textBody = rawBody.toString();
+	let body: any;
+	try
+	{
+		body = JSON.parse(textBody);
+	}
+	catch (error)
+	{
+		handleResourceError({response, apiError: jsonInvalid});
+		return;
+	};
+	if (resourceMethod.exposeRawBody) request.rawBody = rawBody;
+	if (resourceMethod.exposeTextBody) request.textBody = textBody;
+	request.body = body;
+	next();
 };
 
 function initialiseResourceMethodParameter(methodHandler: ExpressRouteHandler <ExpressRoute>, resourceAncestors: ResourcesArray)
