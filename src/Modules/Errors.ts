@@ -222,3 +222,9 @@ export class PluckInvalid extends ApiError
 		super(parameters);
 	};
 };
+
+/** Resource method unavailable. */
+export const resourceMethodUnavailable = new ApiError({code: 'resourceMethodUnavailable', status: 405});
+
+/** Body cannot be parsed as JSON. */
+export const jsonInvalid = new ApiError({code: 'jsonInvalid', status: 400});
