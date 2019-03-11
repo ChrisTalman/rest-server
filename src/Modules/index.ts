@@ -242,7 +242,11 @@ function initialiseRouterParser({resource, router}: {resource: Resource, router:
 function handleRouterJsonParse({request, response, next, resource}: {request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction, resource: Resource})
 {
 	const rawBody: Buffer = request.body;
-	if (!rawBody) next();
+	if (!rawBody)
+	{
+		next();
+		return;
+	};
 	const textBody = rawBody.toString();
 	let body: any;
 	try
@@ -255,7 +259,11 @@ function handleRouterJsonParse({request, response, next, resource}: {request: Ex
 		return;
 	};
 	const resourceMethod: ResourceMethod = resource.methods && resource.methods[request.method];
-	if (!resourceMethod) next();
+	if (!resourceMethod)
+	{
+		next();
+		return;
+	};
 	if (resourceMethod.exposeRawBody) request.rawBody = rawBody;
 	if (resourceMethod.exposeTextBody) request.textBody = textBody;
 	request.body = body;
