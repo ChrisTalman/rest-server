@@ -33,7 +33,8 @@ import
 	Router as ExpressRouter,
 	IRoute as ExpressRoute,
 	Request as GenericExpressRequest,
-	Response as GenericExpressResponse
+	Response as GenericExpressResponse,
+	NextFunction as ExpressNextFunction
 } from 'express';
 export interface ExpressRequest extends GenericExpressRequest
 {
@@ -143,6 +144,7 @@ export default class RestServer
 		this.app.locals.config = this.config;
 		initialiseExpress(this.app);
 		initialiseResources(this.app);
+		initialiseErrorHandler(this.app);
 		this.httpServer = listenExpressHttp(this.app);
 	};
 	/** Closes HTTP server socket, preventing new requests. Promise resolves once all active connections have gracefully closed. */
@@ -160,6 +162,19 @@ function initialiseExpress(app: ExpressApplication)
 {
 	app.use(BodyParser.json());
 	app.use(Cors());
+};
+
+/** Initialises callback to handle middleware errors, like SyntaxError thrown by BodyParser.json(). */
+function initialiseErrorHandler(app: ExpressApplication)
+{
+	app.use((error: any, request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction) => handleError({error, response, next}));
+};
+
+/** If middleware error exists, respond with unexpected error, otherwise invoke next() to proceed to next middleware. */
+function handleError({error, response, next}: {error: any, response: ExpressResponse, next: ExpressNextFunction})
+{
+	if (!error) next();
+	handleResourceError({response});
 };
 
 /** Registers routes for the given Express app. */
