@@ -26,6 +26,8 @@ const RESOURCE_METHOD_SCHEMA =
 			Joi.boolean(),
 			Joi.valid('bearer', 'bearer-optional')
 		),
+	exposeRawBody: Joi.boolean().default(false),
+	exposeTextBody: Joi.boolean().default(false),
 	handler: Joi.func().required()
 };
 const RESOURCE_SCHEMA =
