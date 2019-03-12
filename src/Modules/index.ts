@@ -24,6 +24,7 @@ import { resourceMethodUnavailable, jsonInvalid } from './Errors';
 export * from './Errors';
 import { handleResourceError } from './Utilities';
 export * from './Utilities';
+import mirror from 'src/Modules/Utilities/Mirror';
 
 // Types
 import { Server as HttpServer } from 'http';
@@ -135,6 +136,15 @@ export interface ValidatedConfig extends Config
 {
 	root: string;
 };
+
+// Constants
+const BODYLESS_METHOD = mirror
+(
+	{
+		GET: true
+	}
+);
+const BODYLESS_METHODS = Object.values(BODYLESS_METHOD);
 
 export default class RestServer
 {
@@ -272,14 +282,32 @@ class ResourceMethodMismatch extends Error
 	};
 };
 
+/** Initialise method handler callbacks to handle parsing for the method. */
 function initialiseResourceMethodParser <ExpressRoute> ({methodHandler, method}: {methodHandler: ExpressRouteHandler <ExpressRoute>, method: ResourceMethod})
 {
-	methodHandler(BodyParser.raw({type: 'application/json'}));
+	methodHandler((request, response, next) => handleResourceMethodRawParse({request, response, next}));
 	methodHandler((request, response, next) => handleResourceMethodJsonParse({request, response, next, resourceMethod: method}));
 };
 
+/** Run raw parser if method can have body, otherwise invoke next(). */
+function handleResourceMethodRawParse({request, response, next}: {request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction})
+{
+	if ((BODYLESS_METHODS as Array<string>).includes(request.method))
+	{
+		next();
+		return;
+	};
+	BodyParser.raw({type: 'application/json'})(request, response, next);
+};
+
+/** Run JSON parse if method can have body, otherwise invoke next(). */
 function handleResourceMethodJsonParse({request, response, next, resourceMethod}: {request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction, resourceMethod: ResourceMethod})
 {
+	if ((BODYLESS_METHODS as Array<string>).includes(request.method))
+	{
+		next();
+		return;
+	};
 	const rawBody: Buffer = request.body;
 	if (!rawBody)
 	{
