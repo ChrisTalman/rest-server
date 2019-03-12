@@ -90,8 +90,8 @@ export interface ResourceMethod <GenericMethodName = ResourceMethodNameUpperCase
 	exposeTextBody?: boolean;
 	handler: ResourceMethodHandler;
 };
-type ResourceMethodNameUpperCase = 'GET' | 'POST' | 'PATCH' | 'DELETE';
-type ResourceMethodNameLowerCase = 'get' | 'post' | 'patch' | 'delete';
+type ResourceMethodNameUpperCase = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+type ResourceMethodNameLowerCase = 'get' | 'post' | 'put' | 'patch' | 'delete';
 export type ResourceMethodHandler = (parameters: ResourceMethodHandlerParameters) => void;
 export interface ResourceMethodHandlerParameters <GenericRequest extends ExpressRequest = ExpressRequest, GenericResponse extends ExpressResponse = ExpressResponse>
 {

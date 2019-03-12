@@ -52,7 +52,7 @@ declare module '@bluecewe/rest-server'
     	exposeTextBody?: boolean;
     	handler: ResourceMethodHandler;
     }
-    type ResourceMethodNameUpperCase = 'GET' | 'POST' | 'PATCH' | 'DELETE';
+    type ResourceMethodNameUpperCase = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     export interface Schema
     {
     	[key: string]: any;

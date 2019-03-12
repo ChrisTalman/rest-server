@@ -18,7 +18,7 @@ const PLUCK_SCHEMA = Joi
 	);
 const RESOURCE_METHOD_SCHEMA =
 {
-	name: Joi.valid('GET', 'POST', 'PATCH', 'DELETE').optional(),
+	name: Joi.valid('GET', 'POST', 'PUT', 'PATCH', 'DELETE').optional(),
 	schema: Joi.alternatives(Joi.object(), (Joi.object() as any).schema()).optional(),
 	pluck: PLUCK_SCHEMA.optional(),
 	authenticate: Joi.alternatives
@@ -34,7 +34,7 @@ const RESOURCE_SCHEMA =
 {
     name: Joi.string().optional(),
 	retrieve: Joi.func().optional(),
-	methods: Joi.object().pattern(/(?:GET|POST|PATCH|DELETE)/, RESOURCE_METHOD_SCHEMA).default({}),
+	methods: Joi.object().pattern(/(?:GET|POST|PUT|PATCH|DELETE)/, RESOURCE_METHOD_SCHEMA).default({}),
 	resources: Joi.object().pattern(/.+/, Joi.lazy(() => Joi.object(RESOURCE_SCHEMA))).default({})
 };
 const AUTHENTICATION_SCHEMA =
