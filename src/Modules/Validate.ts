@@ -29,7 +29,7 @@ export default function(schema: object, request: ExpressRequest, response: Expre
 			}
 			catch (error)
 			{
-				handleResourceError({response, apiError: InvalidBody.generate(error.message), status: 400});
+				handleResourceError({response, apiError: InvalidBody.generate(error.message)});
 				return;
 			};
 		}
@@ -40,13 +40,13 @@ export default function(schema: object, request: ExpressRequest, response: Expre
 	};
 	if (typeof body !== 'object' || body === null)
 	{
-		handleResourceError({response, apiError: InvalidBody.generate('Not of type object.'), status: 400});
+		handleResourceError({response, apiError: InvalidBody.generate('Not of type object.')});
 		return;
 	};
 	const validated = Joi.validate(body, schema, JOI_VALIDATE_OPTIONS);
 	if (validated.error)
 	{
-		handleResourceError({response, apiError: InvalidBody.generate(validated.error.message), status: 400});
+		handleResourceError({response, apiError: InvalidBody.generate(validated.error.message)});
 		return;
 	};
 	response.locals.parameters = validated.value;
