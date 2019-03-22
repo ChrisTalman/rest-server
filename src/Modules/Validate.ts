@@ -8,7 +8,8 @@ import { handleResourceError } from 'src/Modules/Utilities';
 import { InvalidBody } from 'src/Modules/Errors';
 
 // Types
-import { Request as ExpressRequest, Response as ExpressResponse, NextFunction as ExpressNextFunction } from 'express';
+import { Response as ExpressResponse, NextFunction as ExpressNextFunction } from 'express';
+import { ExpressRequest } from './';
 
 // Constants
 const JOI_VALIDATE_OPTIONS: Joi.ValidationOptions =
@@ -18,32 +19,12 @@ const JOI_VALIDATE_OPTIONS: Joi.ValidationOptions =
 
 export default function(schema: object, request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction)
 {
-	let body: object = request.body;
-	if (request.method === 'GET')
-	{
-		if (request.query.hasOwnProperty('body'))
-		{
-			try
-			{
-				body = JSON.parse(request.query.body);
-			}
-			catch (error)
-			{
-				handleResourceError({response, apiError: InvalidBody.generate(error.message)});
-				return;
-			};
-		}
-		else
-		{
-			body = {};
-		};
-	};
-	if (typeof body !== 'object' || body === null)
+	if (typeof request.body !== 'object' || request.body === null)
 	{
 		handleResourceError({response, apiError: InvalidBody.generate('Not of type object.')});
 		return;
 	};
-	const validated = Joi.validate(body, schema, JOI_VALIDATE_OPTIONS);
+	const validated = Joi.validate(request.body, schema, JOI_VALIDATE_OPTIONS);
 	if (validated.error)
 	{
 		handleResourceError({response, apiError: InvalidBody.generate(validated.error.message)});

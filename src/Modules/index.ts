@@ -303,18 +303,33 @@ function handleResourceMethodRawParse({request, response, next}: {request: Expre
 /** Run JSON parse if method can have body, otherwise invoke next(). */
 function handleResourceMethodJsonParse({request, response, next, resourceMethod}: {request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction, resourceMethod: ResourceMethod})
 {
-	if ((BODYLESS_METHODS as Array<string>).includes(request.method))
-	{
-		next();
-		return;
-	};
 	const rawBody: Buffer = request.body;
-	if (!rawBody)
+	let textBody: string;
+	if (rawBody)
 	{
+		textBody = rawBody.toString();
+	}
+	else
+	{
+		const isBodylessMethod = (BODYLESS_METHODS as Array<string>).includes(request.method);
+		const queryBodyAvailable = 'body' in request.query;
+		if (isBodylessMethod && queryBodyAvailable)
+		{
+			textBody = request.query.body;
+		}
+		else
+		{
+			request.body = undefined;
+			next();
+			return;
+		};
+	};
+	if (textBody === undefined || textBody.length === 0)
+	{
+		request.body = undefined;
 		next();
 		return;
 	};
-	const textBody = rawBody.toString();
 	let body: any;
 	try
 	{
