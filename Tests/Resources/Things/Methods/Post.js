@@ -1,9 +1,16 @@
 'use strict';
 
+// External Modules
+const Joi = require('joi');
+
 module.exports =
 {
     exposeTextBody: true,
-    handler
+    handler,
+    schema:
+    {
+        hi: Joi.boolean().required()
+    }
 };
 
 async function handler({request, response})
