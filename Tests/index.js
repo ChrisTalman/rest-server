@@ -5,6 +5,7 @@ const { default: RestServer } = require('../');
 
 // Resources
 const things = require ('./Resources/Things');
+const aws = require ('./Resources/AWS');
 
 new RestServer
 (
@@ -12,7 +13,8 @@ new RestServer
         port: 3000,
         resources:
         {
-            things
+            things,
+			aws
         },
         debug:
         {
