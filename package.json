@@ -1,6 +1,6 @@
 {
 	"name": "@bluecewe/rest-server",
-	"version": "2.1.5",
+	"version": "2.1.6",
 	"license": "UNLICENSED",
 	"repository": {
 		"type": "git",
@@ -28,7 +28,7 @@
 	},
 	"scripts": {
 		"build": "./node_modules/.bin/webpack",
-		"start-dev": "node --inspect ./Tests/index.js"
+		"start-dev": "nodemon --inspect ./Tests/index.js"
 	},
 	"types": "./index.d.ts"
 }

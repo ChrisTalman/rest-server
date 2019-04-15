@@ -1,5 +1,6 @@
 'use strict';
 
+// To Do: Allow some degree of user control over when the raw parser is used on different content types. For instance, it was orignally only application/json, but now also includes text/plain, because this was required to handle AWS SES webhook requests, which, due to a bug, use text/plain, when they should use application/json.
 // To Do: Use object for resource methods instead of array, so that method name is taken from each key, and duplicates are automatically prevented.
 // To Do: Encapsulate every resource handler in a try catch block, so that a response can be given when an unexpected error occurs in code. Currently, if there is an unhandled error in handler code, the requester will never receive a response. This has been partly implemented with handleResourceMethod().
 // To Do: Output methods for each resource.
@@ -297,7 +298,7 @@ function handleResourceMethodRawParse({request, response, next}: {request: Expre
 		next();
 		return;
 	};
-	BodyParser.raw({type: 'application/json'})(request, response, next);
+	BodyParser.raw({type: ['application/json', 'text/plain']})(request, response, next);
 };
 
 /** Run JSON parse if method can have body, otherwise invoke next(). */
