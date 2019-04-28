@@ -21,6 +21,7 @@ import validate from './Validate';
 import validatePluck from './ValidatePluck';
 import handleResourceMethodParameter from './Retrieve';
 import * as Errors from './Errors';
+import { NotFound as NotFoundError } from './Errors';
 import { resourceMethodUnavailable, jsonInvalid } from './Errors';
 export * from './Errors';
 import { handleResourceError } from './Utilities';
@@ -418,7 +419,8 @@ function listenResourceNotFound(app: ExpressApplication)
 
 function handleResourceNotFound({response}: ResourceMethodHandlerParameters)
 {
-	response.status(404).json(Errors.NotFound.generate('nonexistent')); // To Do: Provide more specific error to indicate that the structure does not exist, not simply a database entity.
+	// To Do: Provide more specific error to indicate that the structure does not exist, not simply a database entity.
+	handleResourceError({response, apiError: new NotFoundError('nonexistent')});
 };
 
 /** Creates and initialises a HTTP server for the given Express app. */
