@@ -19,8 +19,9 @@ export function handleResourceError(parameters: {response: ExpressResponse, apiE
 /** Handles resource success. */
 export function handleResourceSuccess({response, json}: {response: ExpressResponse, json?: any})
 {
+    if (response.headersSent) return;
     if (json) response.status(200).json(json);
-    else response.sendStatus(200);
+    else response.status(200).send();
 };
 
 /** Assigns parameters properties to target object. */
