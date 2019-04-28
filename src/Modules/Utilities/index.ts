@@ -7,9 +7,9 @@ import { ApiError, UnexpectedError } from 'src/Modules/Errors';
 /** Handles the given resource error. */
 export function handleResourceError(parameters: {response: ExpressResponse, apiError?: ApiError, error?: Error, status?: number})
 {
-    const { response } = parameters;
+	const { response } = parameters;
 	if (parameters.error) console.log(parameters.error);
-    if (response.headersSent) return;
+	if (response.headersSent) return;
 	const apiError = parameters.apiError || UnexpectedError.generate();
 	const status = parameters.status ? parameters.status : apiError.status;
 	const transportableError = apiError.toTransport();
@@ -19,18 +19,18 @@ export function handleResourceError(parameters: {response: ExpressResponse, apiE
 /** Handles resource success. */
 export function handleResourceSuccess({response, json}: {response: ExpressResponse, json?: any})
 {
-    if (response.headersSent) return;
-    if (json) response.status(200).json(json);
-    else response.status(200).send();
+	if (response.headersSent) return;
+	if (json) response.status(200).json(json);
+	else response.status(200).send();
 };
 
 /** Assigns parameters properties to target object. */
 export function assignPropertiesFromParameters ({target, parameters}: {target: object, parameters: object})
 {
-    const keys = Object.keys(parameters);
-    for (let key of keys)
-    {
-        const value = parameters[key];
-        target[key] = value;
-    };
+	const keys = Object.keys(parameters);
+	for (let key of keys)
+	{
+		const value = parameters[key];
+		target[key] = value;
+	};
 };
