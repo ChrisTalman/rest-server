@@ -307,7 +307,11 @@ function handleResourceMethodJsonParse({request, response, next, resourceMethod}
 {
 	const rawBody: Buffer = request.body;
 	const rawBodyIsEmptyObject = typeof request.body === 'object' && request.body !== null && Object.keys(request.body).length === 0;
-	if (rawBodyIsEmptyObject) return;
+	if (rawBodyIsEmptyObject)
+	{
+		next();
+		return;
+	};
 	let textBody: string;
 	if (rawBody)
 	{
