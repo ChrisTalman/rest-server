@@ -1,5 +1,6 @@
 'use strict';
 
+// To Do: Use async await instead of next() where possible. This could reduce the potential for mistakes, where next() might not be called even though execution has stopped.
 // To Do: Allow some degree of user control over when the raw parser is used on different content types. For instance, it was orignally only application/json, but now also includes text/plain, because this was required to handle AWS SES webhook requests, which, due to a bug, use text/plain, when they should use application/json.
 // To Do: Use object for resource methods instead of array, so that method name is taken from each key, and duplicates are automatically prevented.
 // To Do: Encapsulate every resource handler in a try catch block, so that a response can be given when an unexpected error occurs in code. Currently, if there is an unhandled error in handler code, the requester will never receive a response. This has been partly implemented with handleResourceMethod().
