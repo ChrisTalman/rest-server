@@ -306,6 +306,8 @@ function handleResourceMethodRawParse({request, response, next}: {request: Expre
 function handleResourceMethodJsonParse({request, response, next, resourceMethod}: {request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction, resourceMethod: ResourceMethod})
 {
 	const rawBody: Buffer = request.body;
+	const rawBodyIsEmptyObject = typeof request.body === 'object' && request.body !== null && Object.keys(request.body).length === 0;
+	if (rawBodyIsEmptyObject) return;
 	let textBody: string;
 	if (rawBody)
 	{
