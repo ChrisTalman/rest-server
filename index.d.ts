@@ -45,6 +45,7 @@ declare module '@bluecewe/rest-server'
             'bearer': Authentication is required in form of RFC 6750 Bearer token
             'bearer-optional': Same as 'bearer', but only evaluated by callback if token is provided in request
     	*/
+    	jsonContentTypes?: Array<string>;
     	authenticate?: boolean | 'bearer' | 'bearer-optional';
     	schema?: Schema;
     	pluck?: Pluck.Variant;
