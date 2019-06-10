@@ -87,6 +87,7 @@ export type ResourceMethods =
 export interface ResourceMethod <GenericMethodName = ResourceMethodNameUpperCase> extends ResourceMethodAuthenticate
 {
 	name?: GenericMethodName;
+	jsonContentTypes?: Array<string>;
 	schema?: Schema;
 	pluck?: Pluck.Variant;
 	exposeRawBody?: boolean;
@@ -148,6 +149,11 @@ const BODYLESS_METHOD = mirror
 	}
 );
 const BODYLESS_METHODS = Object.values(BODYLESS_METHOD);
+const RAW_BODY_PARSE_CONTENT_TYPES =
+[
+	'application/json',
+	'text/plain'
+];
 
 export default class RestServer
 {
@@ -288,19 +294,20 @@ class ResourceMethodMismatch extends Error
 /** Initialise method handler callbacks to handle parsing for the method. */
 function initialiseResourceMethodParser <ExpressRoute> ({methodHandler, method}: {methodHandler: ExpressRouteHandler <ExpressRoute>, method: ResourceMethod})
 {
-	methodHandler((request, response, next) => handleResourceMethodRawParse({request, response, next}));
+	methodHandler((request, response, next) => handleResourceMethodRawParse({request, response, next, resourceMethod: method}));
 	methodHandler((request, response, next) => handleResourceMethodJsonParse({request, response, next, resourceMethod: method}));
 };
 
 /** Run raw parser if method can have body, otherwise invoke next(). */
-function handleResourceMethodRawParse({request, response, next}: {request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction})
+function handleResourceMethodRawParse({request, response, next, resourceMethod}: {request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction, resourceMethod: ResourceMethod})
 {
 	if ((BODYLESS_METHODS as Array<string>).includes(request.method))
 	{
 		next();
 		return;
 	};
-	BodyParser.raw({type: ['application/json', 'text/plain']})(request, response, next);
+	const type = resourceMethod.jsonContentTypes || RAW_BODY_PARSE_CONTENT_TYPES;
+	BodyParser.raw({type})(request, response, next);
 };
 
 /** Run JSON parse if method can have body, otherwise invoke next(). */
