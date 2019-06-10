@@ -21,6 +21,7 @@ const RESOURCE_METHOD_SCHEMA =
 	name: Joi.valid('GET', 'POST', 'PUT', 'PATCH', 'DELETE').optional(),
 	schema: Joi.alternatives(Joi.object(), (Joi.object() as any).schema()).optional(),
 	pluck: PLUCK_SCHEMA.optional(),
+	jsonContentTypes: Joi.array().items(Joi.string()).min(1).optional(),
 	authenticate: Joi.alternatives
 		(
 			Joi.boolean(),
