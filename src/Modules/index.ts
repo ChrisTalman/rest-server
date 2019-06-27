@@ -84,12 +84,13 @@ export type ResourceMethods =
 {
 	[MethodName in ResourceMethodNameUpperCase]?: ResourceMethod <MethodName>
 };
+import { Pluck } from './ValidatePluck';
 export interface ResourceMethod <GenericMethodName = ResourceMethodNameUpperCase> extends ResourceMethodAuthenticate
 {
 	name?: GenericMethodName;
 	jsonContentTypes?: Array<string>;
 	schema?: Schema;
-	pluck?: Pluck.Variant;
+	pluck?: Pluck;
 	exposeRawBody?: boolean;
 	exposeTextBody?: boolean;
 	handler: ResourceMethodHandler;
@@ -105,14 +106,6 @@ export interface ResourceMethodHandlerParameters <GenericRequest extends Express
 export interface Schema
 {
 	[key: string]: any;
-};
-export namespace Pluck
-{
-	export type Variant = Array<string | Object> | Object;
-	export interface Object
-	{
-		[field: string]: Variant | boolean;
-	};
 };
 export interface ExpressApplication extends GenericExpressApplication
 {

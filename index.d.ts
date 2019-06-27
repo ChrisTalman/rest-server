@@ -137,8 +137,16 @@ declare module '@bluecewe/rest-server'
     export interface ExpressResponsePluck
     {
     	/** The original parsed value of the pluck. */
-    	parsed: object;
+    	parsed: Pluck;
     	/** The RethinkDB-compatabile value of the pluck. */
     	rethink: Array<any> | {[key: string]: any};
+        /** The value of the pluck in object form. */
+        object: Pluck;
+    }
+    export type Pluck = string | ArrayPluck | ObjectPluck;
+    interface ArrayPluck extends Array<Pluck> {}
+    interface ObjectPluck
+    {
+    	[key: string]: string | true | ArrayPluck | ObjectPluck;
     }
 }

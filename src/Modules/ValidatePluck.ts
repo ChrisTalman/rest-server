@@ -15,7 +15,13 @@ import { Request as ExpressRequest, Response as ExpressResponse, NextFunction as
 import { ResourceMethod } from './';
 interface Body
 {
-	pluck?: object;
+	pluck?: Pluck;
+};
+export type Pluck = string | ArrayPluck | ObjectPluck;
+interface ArrayPluck extends Array<Pluck> {};
+interface ObjectPluck
+{
+	[key: string]: string | true | ArrayPluck | ObjectPluck;
 };
 
 // Constants
@@ -62,10 +68,14 @@ export default function(method: ResourceMethod, request: ExpressRequest, respons
 		handleResourceError({response, apiError: PluckParse.generate()});
 		return;
 	};
-	const pluckProvided =  body.hasOwnProperty('pluck');
-	if (method.pluck && !pluckProvided)
+	if (method.pluck && body.pluck === undefined)
 	{
 		handleResourceError({response, apiError: PluckRequired.generate()});
+		return;
+	};
+	if (body.pluck === undefined)
+	{
+		next();
 		return;
 	};
 	const validated = Joi.validate(body.pluck, SCHEMA);
@@ -79,7 +89,47 @@ export default function(method: ResourceMethod, request: ExpressRequest, respons
 	response.locals.pluck =
 	{
 		parsed: pluck,
-		rethink: pluck
+		rethink: pluck,
+		object: objectifyPluck(pluck)
 	};
 	next();
+};
+
+/** Returns given pluck in object form, whether it is already in that form or not. */
+function objectifyPluck(pluck: Pluck)
+{
+	const object: Pluck = {};
+	if (typeof pluck === 'string')
+	{
+		object[pluck] = true;
+	}
+	else if (Array.isArray(pluck))
+	{
+		for (let field of pluck)
+		{
+			if (typeof field === 'string')
+			{
+				object[field] = true;
+			}
+			else
+			{
+				Object.assign(object, objectifyPluck(field));
+			};
+		};
+	}
+	else
+	{
+		for (let { 0: field, 1: value } of Object.entries(pluck))
+		{
+			if (typeof value === 'string' || value === true)
+			{
+				object[field] = value;
+			}
+			else
+			{
+				Object.assign(object, objectifyPluck(value));
+			};
+		};
+	};
+	return object;
 };
