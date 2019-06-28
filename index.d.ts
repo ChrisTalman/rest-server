@@ -48,7 +48,7 @@ declare module '@bluecewe/rest-server'
     	jsonContentTypes?: Array<string>;
     	authenticate?: boolean | 'bearer' | 'bearer-optional';
     	schema?: Schema;
-    	pluck?: Pluck.Variant;
+    	pluck?: Pluck;
     	exposeRawBody?: boolean;
     	exposeTextBody?: boolean;
     	handler: ResourceMethodHandler;
@@ -57,14 +57,6 @@ declare module '@bluecewe/rest-server'
     export interface Schema
     {
     	[key: string]: any;
-    }
-    export namespace Pluck
-    {
-    	export type Variant = Array<string | Object> | Object;
-    	export interface Object
-    	{
-    		[field: string]: Variant | boolean;
-    	}
     }
     export type ResourceMethodHandler = ({request, response}: {request?: ExpressRequest, response?: ExpressResponse}) => void;
     // Resource Retrieve
@@ -139,14 +131,18 @@ declare module '@bluecewe/rest-server'
     	/** The original parsed value of the pluck. */
     	parsed: Pluck;
     	/** The RethinkDB-compatabile value of the pluck. */
-    	rethink: Array<any> | {[key: string]: any};
+    	rethink: Pluck;
         /** The value of the pluck in object form. */
-        object: Pluck;
+        object: ObjectifiedPluck;
     }
     export type Pluck = string | ArrayPluck | ObjectPluck;
     interface ArrayPluck extends Array<Pluck> {}
     interface ObjectPluck
     {
     	[key: string]: string | true | ArrayPluck | ObjectPluck;
+    }
+    interface ObjectifiedPluck
+    {
+        [key: string]: true | ObjectifiedPluck;
     }
 }
