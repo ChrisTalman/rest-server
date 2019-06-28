@@ -127,7 +127,7 @@ function objectifyPluck(pluck: Pluck)
 			}
 			else
 			{
-				Object.assign(object, objectifyPluck(value));
+				object[field] = objectifyPluck(value);
 			};
 		};
 	};
