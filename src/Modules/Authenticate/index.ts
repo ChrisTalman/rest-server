@@ -75,7 +75,9 @@ export default async function authenticate({method, request, response, next}: {m
 	}
 	catch (error)
 	{
-		handleResourceError({response, apiError: error instanceof ApiError ? error : undefined});
+		const apiError = error instanceof ApiError ? error : undefined;
+		const logError = error instanceof ApiError ? undefined : error;
+		handleResourceError({response, apiError, error: logError});
 		return;
 	};
 	// Respond with error
