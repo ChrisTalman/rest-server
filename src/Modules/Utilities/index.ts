@@ -20,7 +20,7 @@ export function handleResourceError(parameters: {response: ExpressResponse, apiE
 export function handleResourceSuccess({response, json}: {response: ExpressResponse, json?: any})
 {
 	if (response.headersSent) return;
-	if (json) response.status(200).json(json);
+	if (json !== undefined) response.status(200).json(json);
 	else response.status(200).send();
 };
 
