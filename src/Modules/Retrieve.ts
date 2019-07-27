@@ -11,8 +11,12 @@ import { TransformedResource, ResourcesArray, ResourceRetrieve } from './';
 
 export default async function({resourceAncestors, request, response, next}: {resourceAncestors: ResourcesArray, request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction})
 {
-	const promises = resourceAncestors.map(resource => retrieveParameter({resource: resource as TransformedResource, request, response}));
-	const results = await Promise.all(promises);
+	const results: Array<true | undefined> = [];
+	for (let resource of resourceAncestors)
+	{
+		const result = await retrieveParameter({resource: resource as TransformedResource, request, response});
+		results.push(result);
+	};
 	const success = results.every(result => result === true);
 	if (!success) return;
 	next();
