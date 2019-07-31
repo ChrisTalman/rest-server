@@ -8,7 +8,7 @@ import { ApiError, UnexpectedError } from 'src/Modules/Errors';
 export function handleResourceError(parameters: {response: ExpressResponse, apiError?: ApiError, error?: Error, status?: number})
 {
 	const { response } = parameters;
-	if (parameters.error) console.log(parameters.error);
+	if (parameters.error) console.log(parameters.error.stack || parameters.error);
 	if (response.headersSent) return;
 	const apiError = parameters.apiError || UnexpectedError.generate();
 	const status = parameters.status ? parameters.status : apiError.status;
