@@ -104,7 +104,12 @@ declare module '@bluecewe/rest-server'
     	public message?: string;
     	constructor(parameters: {code: string, status: number, message?: string, resourceName?: string});
     	/** Generates an object to transport to an API client. */
-    	toTransport(): { code: string; message: string; };
+    	toTransport(): ApiErrorBaseTransport;
+    }
+    interface ApiErrorBaseTransport
+    {
+    	code: string;
+    	message?: string;
     }
     // Utilities
     export function handleResourceSuccess({response, json}: {response: ExpressResponse, json?: any}): void;
