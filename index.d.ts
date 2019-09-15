@@ -66,7 +66,7 @@ declare module '@bluecewe/rest-server'
 		request: GenericRequest;
 		response: GenericResponse;
 	}
-	export type ResourceRetrieveValue = object | false;
+	export type ResourceRetrieveValue = object | false | null | undefined;
 	export interface Config
 	{
 		port: number;
