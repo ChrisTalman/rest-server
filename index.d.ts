@@ -115,11 +115,13 @@ declare module '@bluecewe/rest-server'
 	export function handleResourceSuccess({response, json}: {response: ExpressResponse, json?: any}): void;
 	export function handleResourceError({response, apiError, error, status}: {response: ExpressResponse, apiError?: ApiError, error?: Error, status?: number}): void;
 	// Express
-	export interface ExpressRequest extends GenericExpressRequest
+	export interface ExpressRequest <GenericParams extends StringifyProperties<GenericParams> = {}> extends GenericExpressRequest
 	{
+		params: GenericParams;
 		rawBody?: Buffer;
 		textBody?: string;
 	}
+	type StringifyProperties <Generic> = { [Key in keyof Generic]: string; };
 	export interface ExpressResponse extends GenericExpressResponse
 	{
 		locals: ExpressLocals;
