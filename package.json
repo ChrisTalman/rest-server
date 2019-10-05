@@ -1,13 +1,8 @@
 {
-	"name": "@bluecewe/rest-server",
+	"name": "@ChrisTalman/rest-server",
 	"version": "2.3.3",
 	"license": "UNLICENSED",
-	"repository": {
-		"type": "git",
-		"url": "https://bitbucket.org/Bluecewe/rest-server.git"
-	},
 	"main": "index.js",
-	"private": true,
 	"dependencies": {
 		"@types/express": "4.16.0",
 		"@types/joi": "14.0.1",
