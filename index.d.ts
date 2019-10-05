@@ -5,7 +5,7 @@
 import { Server as HttpServer } from 'http';
 import { Application as ExpressApplication, Request as GenericExpressRequest, Response as GenericExpressResponse } from 'express';
 
-declare module '@bluecewe/rest-server'
+declare module '@ChrisTalman/rest-server'
 {
 	// Initialise
 	export default class RestServer
