@@ -152,4 +152,9 @@ declare module '@ChrisTalman/rest-server'
 	{
 		[key: string]: true | ObjectifiedPluck;
 	}
+	// Errors
+	export class NotFound extends ApiError
+	{
+		constructor(resource: string);
+	}
 }
