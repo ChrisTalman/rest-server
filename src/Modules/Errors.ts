@@ -132,6 +132,9 @@ export class BearerTokenMissing extends ApiError
 	};
 };
 
+/** Authentication is required but could not be found for given bearer token. */
+export const unauthenticated = new ApiError({code: 'unauthenticated', status: 401});
+
 /** A generic API error for when a user is unauthorised for something. */
 export class UnauthorisedError extends ApiError
 {
