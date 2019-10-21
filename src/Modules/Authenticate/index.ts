@@ -101,6 +101,7 @@ export default async function authenticate({method, request, response, next}: {m
 		else
 		{
 			handleResourceError({response, apiError: unauthenticated});
+			return;
 		};
 	}
 	else
