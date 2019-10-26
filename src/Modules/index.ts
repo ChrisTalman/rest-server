@@ -13,12 +13,11 @@ import Express from 'express';
 import * as BodyParser from 'body-parser';
 import * as HTTP from 'http';
 import Cors from 'cors';
-import Joi from 'joi';
 
 // Internal Modules
 import validateConfig from './ValidateConfig';
 import authenticate from './Authenticate';
-import validate from './Validate';
+import { initialiseResourceMethodSchema } from './Schema';
 import validatePluck from './ValidatePluck';
 import handleResourceMethodParameter from './Retrieve';
 import * as Errors from './Errors';
@@ -85,11 +84,12 @@ export type ResourceMethods =
 	[MethodName in ResourceMethodNameUpperCase]?: ResourceMethod <MethodName>
 };
 import { Pluck } from './ValidatePluck';
+import { JoiSchema } from './Schema';
 export interface ResourceMethod <GenericMethodName = ResourceMethodNameUpperCase> extends ResourceMethodAuthenticate
 {
 	name?: GenericMethodName;
 	jsonContentTypes?: Array<string>;
-	schema?: Schema;
+	schema?: JoiSchema;
 	pluck?: Pluck;
 	exposeRawBody?: boolean;
 	exposeTextBody?: boolean;
@@ -102,10 +102,6 @@ export interface ResourceMethodHandlerParameters <GenericRequest extends Express
 {
 	request: GenericRequest;
 	response: GenericResponse;
-};
-export interface Schema
-{
-	[key: string]: any;
 };
 export interface ExpressApplication extends GenericExpressApplication
 {
@@ -270,7 +266,7 @@ function initialiseResourceMethod(name: ResourceMethodNameUpperCase, method: Res
 	initialiseResourceMethodParser <ExpressRoute> ({methodHandler, method});
 	methodHandler((request, response, next) => authenticate({method, request, response, next}));
 	initialiseResourceMethodParameter(methodHandler, resourceAncestors);
-	initialiseMethodSchema(methodIdentifier, method, route);
+	initialiseResourceMethodSchema(methodIdentifier, method, route);
 	if (method.pluck) methodHandler(validatePluck.bind(null, method));
 	methodHandler((request, response) => handleResourceMethod({request, response, method}));
 };
@@ -383,26 +379,6 @@ async function handleResourceMethod({request, response, method}: {request: Expre
 		handleResourceError({error, response, apiError: Errors.UnexpectedError.generate()});
 		return;
 	};
-};
-
-function initialiseMethodSchema(methodIdentifier: string, method: ResourceMethod, route: ExpressRoute)
-{
-	if (!method.schema) return;
-	// To Do: The Joi object might need to be validated to be a Joi object. Otherwise, it could be an Alternatives object, which would cause an exception later.
-	const baseSchema = method.schema.isJoi === true ? (method.schema as Joi.ObjectSchema) : Joi.object(method.schema);
-	const schema = baseSchema
-		.keys
-		(
-			{
-				pluck: Joi.alternatives
-					(
-						Joi.object(),
-					 	Joi.array()
-				 	)
-				 	.optional()
-			}
-		);
-	route[methodIdentifier](validate.bind(null, schema));
 };
 
 function handleResourceMethodUnavailable({response}: ResourceMethodHandlerParameters)
