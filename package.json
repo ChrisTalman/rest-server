@@ -1,8 +1,6 @@
 {
 	"name": "@ChrisTalman/rest-server",
 	"version": "2.4.0",
-	"license": "UNLICENSED",
-	"main": "index.js",
 	"dependencies": {
 		"@types/express": "4.16.0",
 		"@types/joi": "14.0.1",
