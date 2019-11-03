@@ -45,6 +45,7 @@ export interface ExpressRequest extends GenericExpressRequest
 	app: ExpressApplication;
 	rawBody?: Buffer;
 	textBody?: string;
+	route: ExpressRoute;
 };
 export interface ExpressResponse extends GenericExpressResponse
 {

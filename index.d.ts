@@ -3,7 +3,7 @@
 
 // Types
 import { Server as HttpServer } from 'http';
-import { Application as ExpressApplication, Request as GenericExpressRequest, Response as GenericExpressResponse } from 'express';
+import { Application as ExpressApplication, IRoute as ExpressRoute, Request as GenericExpressRequest, Response as GenericExpressResponse } from 'express';
 
 declare module '@chris-talman/rest-server'
 {
@@ -128,6 +128,7 @@ declare module '@chris-talman/rest-server'
 		params: GenericParams;
 		rawBody?: Buffer;
 		textBody?: string;
+		route: ExpressRoute;
 	}
 	type Uniform <Generic, Type> = { [Key in keyof Generic]: Type; };
 	export interface ExpressResponse extends GenericExpressResponse
