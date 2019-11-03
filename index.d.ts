@@ -18,6 +18,7 @@ declare module '@chris-talman/rest-server'
 		/** Closes HTTP server socket, preventing new requests. Promise resolves once all active connections have gracefully closed. */
 		public stop(): Promise<void>;
 	}
+
 	// Resources
 	export interface Resources
 	{
@@ -31,6 +32,7 @@ declare module '@chris-talman/rest-server'
 		methods?: ResourceMethods;
 		resources?: Resources;
 	}
+
 	// Resource Methods
 	export type ResourceMethods =
 	{
@@ -59,6 +61,7 @@ declare module '@chris-talman/rest-server'
 		[key: string]: any;
 	}
 	export type ResourceMethodHandler = ({request, response}: {request?: ExpressRequest, response?: ExpressResponse}) => void;
+
 	// Resource Retrieve
 	export type ResourceRetrieve = (parameters: RetrieveParameters <any, any>) => Promise<ResourceRetrieveValue>;
 	export interface RetrieveParameters <GenericRequest extends ExpressRequest, GenericResponse extends ExpressResponse>
@@ -71,6 +74,8 @@ declare module '@chris-talman/rest-server'
 	{
 		port: number;
 		resources: Resources;
+		/** Callback to run before every request handler. */
+		pre?: ({request, response}: {request: ExpressRequest, response: ExpressResponse}) => Promise<void>;
 		authentication?: AuthenticationConfigVariant;
 		root?: string;
 		debug?: Debug;
@@ -96,6 +101,7 @@ declare module '@chris-talman/rest-server'
 	{
 		paths?: boolean;
 	}
+
 	/** Represents API error. */
 	export class ApiError
 	{
@@ -111,9 +117,11 @@ declare module '@chris-talman/rest-server'
 		code: string;
 		message?: string;
 	}
+
 	// Utilities
 	export function handleResourceSuccess({response, json}: {response: ExpressResponse, json?: any}): void;
 	export function handleResourceError({response, apiError, error, status}: {response: ExpressResponse, apiError?: ApiError, error?: Error, status?: number}): void;
+
 	// Express
 	export interface ExpressRequest <GenericParams extends Uniform<GenericParams, string> = {}> extends GenericExpressRequest
 	{
@@ -152,6 +160,7 @@ declare module '@chris-talman/rest-server'
 	{
 		[key: string]: true | ObjectifiedPluck;
 	}
+
 	// Errors
 	export class NotFound extends ApiError
 	{

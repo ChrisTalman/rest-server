@@ -58,6 +58,7 @@ const SCHEMA =
 {
     port: Joi.number().required(),
     resources: Joi.object().pattern(/.+/, RESOURCE_SCHEMA).default({}),
+	pre: Joi.func().optional(),
 	authentication: Joi.alternatives(Joi.func(), AUTHENTICATION_SCHEMA).optional(),
 	root: Joi.string().default('/'),
 	debug: DEBUG_SCHEMA

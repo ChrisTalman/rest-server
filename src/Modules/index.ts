@@ -117,6 +117,8 @@ export interface Config
 {
 	port: number;
 	resources: Resources;
+	/** Callback to run before every request handler. */
+	pre?: ({request}: {request: ExpressRequest, response: ExpressResponse}) => Promise<void>;
 	authentication?: AuthenticationAppConfig;
 	root?: string;
 	debug?: Debug;
@@ -179,7 +181,7 @@ function initialiseExpress(app: ExpressApplication)
 /** Initialises callback to handle middleware errors, like SyntaxError thrown by BodyParser.json(). */
 function initialiseErrorHandler(app: ExpressApplication)
 {
-	app.use((error: any, request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction) => handleError({error, response, next}));
+	app.use((error: any, {}: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction) => handleError({error, response, next}));
 };
 
 /** If middleware error exists, respond with unexpected error, otherwise invoke next() to proceed to next middleware. */
@@ -268,6 +270,7 @@ function initialiseResourceMethod(name: ResourceMethodNameUpperCase, method: Res
 	initialiseResourceMethodParameter(methodHandler, resourceAncestors);
 	initialiseResourceMethodSchema(methodIdentifier, method, route);
 	if (method.pluck) methodHandler(validatePluck.bind(null, method));
+	methodHandler((request, response, next) => handleResourceMethodPre({request, response, next}));
 	methodHandler((request, response) => handleResourceMethod({request, response, method}));
 };
 
@@ -354,6 +357,25 @@ function handleResourceMethodJsonParse({request, response, next, resourceMethod}
 function initialiseResourceMethodParameter(methodHandler: ExpressRouteHandler <ExpressRoute>, resourceAncestors: ResourcesArray)
 {
 	methodHandler((request, response, next) => handleResourceMethodParameter({resourceAncestors, request, response, next}));
+};
+
+async function handleResourceMethodPre({request, response, next}: {request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction})
+{
+	const { pre } = request.app.locals.config;
+	if (pre)
+	{
+		try
+		{
+			await pre({request, response});
+		}
+		catch (error)
+		{
+			console.error(error.stack || error);
+			handleResourceError({response});
+			return;
+		};
+	};
+	next();
 };
 
 /**
