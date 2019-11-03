@@ -70,9 +70,9 @@ function extendSchemaWithPluck(schema: Joi.ObjectSchema)
 					pluck: Joi.alternatives
 						(
 							Joi.object(),
-						 	Joi.array()
-					 	)
-					 	.optional()
+							Joi.array()
+						)
+						.optional()
 				}
 			);
 	return schema;

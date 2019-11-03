@@ -220,7 +220,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var joi_
 /*!******************************!*\
   !*** ./src/Modules/index.ts ***!
   \******************************/
-/*! exports provided: handleResourceError, handleResourceSuccess, assignPropertiesFromParameters, default, RestServerError, ApiError, UnexpectedError, InvalidBody, NotFound, BearerTokenMissing, unauthenticated, UnauthorisedError, PluckRequired, PluckLong, PluckParse, PluckInvalid, resourceMethodUnavailable, jsonInvalid */
+/*! exports provided: ApiError, UnexpectedError, InvalidBody, NotFound, BearerTokenMissing, unauthenticated, UnauthorisedError, PluckRequired, PluckLong, PluckParse, PluckInvalid, resourceMethodUnavailable, jsonInvalid, handleResourceError, handleResourceSuccess, assignPropertiesFromParameters, default, RestServerError */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

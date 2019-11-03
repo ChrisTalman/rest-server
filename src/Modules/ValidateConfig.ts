@@ -33,7 +33,7 @@ const RESOURCE_METHOD_SCHEMA =
 };
 const RESOURCE_SCHEMA =
 {
-    name: Joi.string().optional(),
+	name: Joi.string().optional(),
 	retrieve: Joi.func().optional(),
 	methods: Joi.object().pattern(/(?:GET|POST|PUT|PATCH|DELETE)/, RESOURCE_METHOD_SCHEMA).default({}),
 	resources: Joi.object().pattern(/.+/, Joi.lazy(() => Joi.object(RESOURCE_SCHEMA))).default({})
@@ -56,8 +56,8 @@ const DEBUG_SCHEMA = Joi.object
 	.default(DEBUG_DEFAULT);
 const SCHEMA =
 {
-    port: Joi.number().required(),
-    resources: Joi.object().pattern(/.+/, RESOURCE_SCHEMA).default({}),
+	port: Joi.number().required(),
+	resources: Joi.object().pattern(/.+/, RESOURCE_SCHEMA).default({}),
 	pre: Joi.func().optional(),
 	authentication: Joi.alternatives(Joi.func(), AUTHENTICATION_SCHEMA).optional(),
 	root: Joi.string().default('/'),

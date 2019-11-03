@@ -4,7 +4,7 @@
 import { Request as ExpressRequest } from 'express';
 export interface Result
 {
-    error: 'unavailable' | 'invalidType' | 'missingToken';
+	error: 'unavailable' | 'invalidType' | 'missingToken';
 };
 
 /** Returns RFC 6750 Bearer token from request. */
