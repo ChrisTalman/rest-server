@@ -25,8 +25,8 @@ module.exports =
 	}
 };
 
-async function pre()
+async function pre({request})
 {
 	console.log('Pre Thing!');
-	return false;
+	console.log('Unparametised Path:', request.route.path);
 };

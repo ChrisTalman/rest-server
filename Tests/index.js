@@ -11,7 +11,7 @@ new RestServer
 (
     {
         port: 3000,
-        pre: ({request}) => console.log('Pre Path:', request.path),
+        pre: ({request}) => console.log('Pre Parametised Path:', request.path),
         resources:
         {
             things,

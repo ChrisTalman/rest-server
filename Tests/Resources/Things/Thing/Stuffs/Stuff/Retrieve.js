@@ -1,7 +1,6 @@
 'use strict';
 
-module.exports = async function retrieve({response})
+module.exports = async function retrieve()
 {
-	console.log('Thing:', response.locals.resourceData.thing);
 	return { b: 2 };
 };

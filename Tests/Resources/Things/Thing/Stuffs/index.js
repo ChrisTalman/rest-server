@@ -7,6 +7,6 @@ module.exports =
 {
 	resources:
 	{
-		':stuff': stuff
+		stuff
 	}
 };
