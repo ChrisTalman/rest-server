@@ -9,7 +9,7 @@ import { Request as ExpressRequest, Response as ExpressResponse, NextFunction as
 import { ResourceRetrieveValue } from 'src/Modules';
 import { TransformedResource, ResourcesArray, ResourceRetrieve } from './';
 
-export default async function({resourceAncestors, request, response, next}: {resourceAncestors: ResourcesArray, request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction})
+export async function handleResourceMethodParameter({resourceAncestors, request, response, next}: {resourceAncestors: ResourcesArray, request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction})
 {
 	const results: Array<true | undefined> = [];
 	for (let resource of resourceAncestors)
@@ -23,8 +23,8 @@ export default async function({resourceAncestors, request, response, next}: {res
 };
 
 /**
-	If resource is a parameter, attempts to retrieve its data and expose in response.locals object.
-	Returns true if it succeeds, or resource is not a parameter. Otherwise, returns undefined.
+	If resource is a parameter, attempts to retrieve its data and expose in `response.locals`.
+	Returns `true` if it succeeds, or resource is not a parameter. Otherwise, returns `undefined`.
 */
 async function retrieveParameter({resource, request, response}: {resource: TransformedResource, request: ExpressRequest, response: ExpressResponse})
 {
@@ -59,14 +59,13 @@ async function retrieveParameter({resource, request, response}: {resource: Trans
 
 function augmentLocals(resource: TransformedResource, response: ExpressResponse, data: object)
 {
-	const resourceNameWithoutColon = resource.name.substring(1);
 	const resourceData = response.locals.resourceData || {};
-	resourceData[resourceNameWithoutColon] = data;
+	resourceData[resource.name] = data;
 	response.locals.resourceData = resourceData;
 };
 
 function isParameter({resource}: {resource: TransformedResource})
 {
-	const is = resource.name[0] === ':' && typeof resource.retrieve === 'function';
+	const is = typeof resource.retrieve === 'function';
 	return is;
 };

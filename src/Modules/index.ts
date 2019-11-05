@@ -20,7 +20,7 @@ import validateConfig from './ValidateConfig';
 import authenticate from './Authenticate';
 import { initialiseResourceMethodSchema } from './Schema';
 import validatePluck from './ValidatePluck';
-import handleResourceMethodParameter from './Retrieve';
+import { handleResourceMethodParameter } from './Retrieve';
 import * as Errors from './Errors';
 import { NotFound as NotFoundError } from './Errors';
 import { resourceMethodUnavailable, jsonInvalid } from './Errors';
@@ -149,6 +149,7 @@ const RAW_BODY_PARSE_CONTENT_TYPES =
 	'application/json',
 	'text/plain'
 ];
+const RESOURCE_NAME_EXPRESSION = /^[\w]$/;
 
 export default class RestServer
 {
@@ -210,13 +211,24 @@ function initialiseResources(app: ExpressApplication)
 function initialiseResource({name, resource: rawResource, router, path, resourceAncestors}: {name: string, resource: Resource, router: ExpressRouter, path: string, resourceAncestors: ResourcesArray})
 {
 	if (typeof rawResource.name === 'string' && rawResource.name !== name) throw new ResourceNameMismatch({name, resource: rawResource});
+	if (!RESOURCE_NAME_EXPRESSION.test(name[0])) throw new ResourceNameInvalid({name});
 	const resource = rawResource as TransformedResource;
 	resource.name = name;
-	path += '/' + resource.name;
+	const parameterPrefix = resource.retrieve ? ':' : '';
+	path += '/' + parameterPrefix + resource.name;
 	resourceAncestors = augmentAncestors({resource, ancestors: resourceAncestors});
 	logPath({resource, path, router});
 	initialiseResourceMiddleware(resource, router, path, resourceAncestors);
 	initialiseSubresources(resource, router, path, resourceAncestors);
+};
+
+class ResourceNameInvalid extends Error
+{
+	constructor({name}: {name: string})
+	{
+		const message = 'Resource name \'' + name + '\' invalid. Must be of form ' + RESOURCE_NAME_EXPRESSION.toString();
+		super(message);
+	};
 };
 
 class ResourceNameMismatch extends Error
