@@ -13,6 +13,7 @@ import Express from 'express';
 import * as BodyParser from 'body-parser';
 import * as HTTP from 'http';
 import Cors from 'cors';
+import { mirror } from '@chris-talman/isomorphic-utilities';
 
 // Internal Modules
 import validateConfig from './ValidateConfig';
@@ -26,7 +27,6 @@ import { resourceMethodUnavailable, jsonInvalid } from './Errors';
 export * from './Errors';
 import { handleResourceError } from './Utilities';
 export * from './Utilities';
-import mirror from 'src/Modules/Utilities/Mirror';
 
 // Types
 import { Server as HttpServer } from 'http';
