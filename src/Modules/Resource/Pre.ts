@@ -36,7 +36,8 @@ export async function handleResourceMethodPre
 			{
 				if (!response.headersSent)
 				{
-					handleResourceError({response, error: new Error('Resource \'pre\' returned \'false\' but did not respond to request')});
+					const path = '/' + resourceAncestors.slice(0, resourceAncestors.findIndex(resourceAncestor => resourceAncestor === resource) + 1).map(resource => resource.name).join('/');
+					handleResourceError({response, error: new Error('Resource \'pre\' returned \'false\' but did not respond to request at \'' + path + '\'')});
 				};
 				return;
 			};
