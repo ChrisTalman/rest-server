@@ -30,7 +30,7 @@ declare module '@chris-talman/rest-server'
 		/** Method to retrieve resource. Stores resource in locals object. Returns 404 if not found. */
 		retrieve?: ResourceRetrieve;
 		/** Callback to run before every request handler. */
-		pre?: ({request, response}: {request: ExpressRequest, response: ExpressResponse}) => Promise<boolean | void>;
+		pre?: ({request, response}: {request?: ExpressRequest, response?: ExpressResponse}) => Promise<boolean | void>;
 		methods?: ResourceMethods;
 		resources?: Resources;
 	}
@@ -77,7 +77,7 @@ declare module '@chris-talman/rest-server'
 		port: number;
 		resources: Resources;
 		/** Callback to run before every request handler. */
-		pre?: ({request, response}: {request: ExpressRequest, response: ExpressResponse}) => Promise<void>;
+		pre?: ({request, response}: {request?: ExpressRequest, response?: ExpressResponse}) => Promise<void>;
 		authentication?: AuthenticationConfigVariant;
 		root?: string;
 		debug?: Debug;

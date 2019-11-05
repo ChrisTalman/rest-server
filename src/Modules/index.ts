@@ -64,7 +64,7 @@ export interface Resource <GenericName = string>
 	/** Method to retrieve resource. Stores resource in locals object. Returns 404 if not found. */
 	retrieve?: ResourceRetrieve;
 	/** Callback to run before every request handler. */
-	pre?: ({request, response}: {request: ExpressRequest, response: ExpressResponse}) => Promise<boolean | void>;
+	pre?: ({request, response}: {request?: ExpressRequest, response?: ExpressResponse}) => Promise<boolean | void>;
 	methods?: ResourceMethods;
 	resources?: Resources;
 };
@@ -122,7 +122,7 @@ export interface Config
 	port: number;
 	resources: Resources;
 	/** Callback to run before every request handler. */
-	pre?: ({request, response}: {request: ExpressRequest, response: ExpressResponse}) => Promise<void>;
+	pre?: ({request, response}: {request?: ExpressRequest, response?: ExpressResponse}) => Promise<void>;
 	authentication?: AuthenticationAppConfig;
 	root?: string;
 	debug?: Debug;
