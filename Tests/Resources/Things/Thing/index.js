@@ -12,6 +12,7 @@ const stuffs = require('./Stuffs');
 
 module.exports =
 {
+	pre,
 	retrieve,
 	methods:
 	{
@@ -22,4 +23,10 @@ module.exports =
 	{
 		stuffs
 	}
+};
+
+async function pre()
+{
+	console.log('Pre Thing!');
+	return false;
 };
