@@ -27,6 +27,7 @@ import { resourceMethodUnavailable, jsonInvalid } from './Errors';
 export * from './Errors';
 import { handleResourceError } from './Utilities';
 export * from './Utilities';
+import { handleResourceMethodPre } from './Resource/Pre';
 
 // Types
 import { Server as HttpServer } from 'http';
@@ -62,6 +63,8 @@ export interface Resource <GenericName = string>
 	name?: GenericName;
 	/** Method to retrieve resource. Stores resource in locals object. Returns 404 if not found. */
 	retrieve?: ResourceRetrieve;
+	/** Callback to run before every request handler. */
+	pre?: ({request, response}: {request: ExpressRequest, response: ExpressResponse}) => Promise<boolean | void>;
 	methods?: ResourceMethods;
 	resources?: Resources;
 };
@@ -119,7 +122,7 @@ export interface Config
 	port: number;
 	resources: Resources;
 	/** Callback to run before every request handler. */
-	pre?: ({request}: {request: ExpressRequest, response: ExpressResponse}) => Promise<void>;
+	pre?: ({request, response}: {request: ExpressRequest, response: ExpressResponse}) => Promise<void>;
 	authentication?: AuthenticationAppConfig;
 	root?: string;
 	debug?: Debug;
@@ -271,7 +274,7 @@ function initialiseResourceMethod(name: ResourceMethodNameUpperCase, method: Res
 	initialiseResourceMethodParameter(methodHandler, resourceAncestors);
 	initialiseResourceMethodSchema(methodIdentifier, method, route);
 	if (method.pluck) methodHandler(validatePluck.bind(null, method));
-	methodHandler((request, response, next) => handleResourceMethodPre({request, response, next}));
+	methodHandler((request, response, next) => handleResourceMethodPre({resourceAncestors, request, response, next}));
 	methodHandler((request, response) => handleResourceMethod({request, response, method}));
 };
 
@@ -358,25 +361,6 @@ function handleResourceMethodJsonParse({request, response, next, resourceMethod}
 function initialiseResourceMethodParameter(methodHandler: ExpressRouteHandler <ExpressRoute>, resourceAncestors: ResourcesArray)
 {
 	methodHandler((request, response, next) => handleResourceMethodParameter({resourceAncestors, request, response, next}));
-};
-
-async function handleResourceMethodPre({request, response, next}: {request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction})
-{
-	const { pre } = request.app.locals.config;
-	if (pre)
-	{
-		try
-		{
-			await pre({request, response});
-		}
-		catch (error)
-		{
-			console.error(error.stack || error);
-			handleResourceError({response});
-			return;
-		};
-	};
-	next();
 };
 
 /**

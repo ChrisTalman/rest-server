@@ -29,6 +29,8 @@ declare module '@chris-talman/rest-server'
 		name?: string;
 		/** Method to retrieve resource. Stores resource in locals object. Returns 404 if not found. */
 		retrieve?: ResourceRetrieve;
+		/** Callback to run before every request handler. */
+		pre?: ({request, response}: {request: ExpressRequest, response: ExpressResponse}) => Promise<boolean | void>;
 		methods?: ResourceMethods;
 		resources?: Resources;
 	}

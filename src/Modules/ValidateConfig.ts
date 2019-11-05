@@ -35,6 +35,7 @@ const RESOURCE_SCHEMA =
 {
 	name: Joi.string().optional(),
 	retrieve: Joi.func().optional(),
+	pre: Joi.func().optional(),
 	methods: Joi.object().pattern(/(?:GET|POST|PUT|PATCH|DELETE)/, RESOURCE_METHOD_SCHEMA).default({}),
 	resources: Joi.object().pattern(/.+/, Joi.lazy(() => Joi.object(RESOURCE_SCHEMA))).default({})
 };
