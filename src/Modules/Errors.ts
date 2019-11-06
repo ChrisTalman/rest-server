@@ -93,7 +93,7 @@ export class NotFound extends ApiError
 	};
 	constructor(resource: TransformedResource | string)
 	{
-		const resourceName = typeof resource === 'string' ? resource : resource.name.substring(1);
+		const resourceName = typeof resource === 'string' ? resource : resource.name;
 		const parameters: ApiErrorParameters =
 		{
 			code: 'notFound',
