@@ -10,7 +10,7 @@ export function handleResourceError(parameters: {response: ExpressResponse, apiE
 	const { response } = parameters;
 	if (parameters.error) console.log(parameters.error.stack || parameters.error);
 	if (response.headersSent) return;
-	const apiError = parameters.apiError || UnexpectedError.generate();
+	const apiError = parameters.apiError || new UnexpectedError();
 	const status = parameters.status ? parameters.status : apiError.status;
 	const transportableError = apiError.toTransport();
 	response.status(status).json(transportableError);

@@ -169,4 +169,8 @@ declare module '@chris-talman/rest-server'
 	{
 		constructor(resource: string);
 	}
+	export class UnauthenticatedError extends ApiError
+	{
+		constructor();
+	}
 }

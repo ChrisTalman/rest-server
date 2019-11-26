@@ -50,7 +50,7 @@ async function retrieveParameter({resource, request, response}: {resource: Trans
 	};
 	if (!data)
 	{
-		handleResourceError({response, apiError: NotFound.generate(resource)});
+		handleResourceError({response, apiError: new NotFound(resource)});
 		return;
 	};
 	augmentLocals(resource, response, data);

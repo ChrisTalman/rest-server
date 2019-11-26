@@ -2,7 +2,7 @@
 
 // Internal Modules
 import { handleResourceError } from 'src/Modules/Utilities';
-import { BearerTokenMissing, unauthenticated } from 'src/Modules/Errors';
+import { BearerTokenMissing, UnauthenticatedError } from 'src/Modules/Errors';
 import getBearerToken from './getBearerToken';
 
 // Types
@@ -56,7 +56,7 @@ export default async function authenticate({method, request, response, next}: {m
 		const bearerResult = getBearerToken(request);
 		if (typeof bearerResult === 'object')
 		{
-			if (method.authenticate === 'bearer' || bearerResult.error !== 'unavailable') handleResourceError({response, apiError: BearerTokenMissing.generate()});
+			if (method.authenticate === 'bearer' || bearerResult.error !== 'unavailable') handleResourceError({response, apiError: new BearerTokenMissing()});
 			else if (method.authenticate === 'bearer-optional') next();
 			return;
 		}
@@ -100,7 +100,7 @@ export default async function authenticate({method, request, response, next}: {m
 		}
 		else
 		{
-			handleResourceError({response, apiError: unauthenticated});
+			handleResourceError({response, apiError: new UnauthenticatedError()});
 			return;
 		};
 	}

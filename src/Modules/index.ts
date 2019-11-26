@@ -21,7 +21,7 @@ import authenticate from './Authenticate';
 import { initialiseResourceMethodSchema } from './Schema';
 import validatePluck from './ValidatePluck';
 import { handleResourceMethodParameter } from './Retrieve';
-import * as Errors from './Errors';
+import { UnexpectedError } from './Errors';
 import { NotFound as NotFoundError } from './Errors';
 import { resourceMethodUnavailable, jsonInvalid } from './Errors';
 export * from './Errors';
@@ -395,7 +395,7 @@ async function handleResourceMethod({request, response, method}: {request: Expre
 	}
 	catch (error)
 	{
-		handleResourceError({error, response, apiError: Errors.UnexpectedError.generate()});
+		handleResourceError({error, response, apiError: new UnexpectedError()});
 		return;
 	};
 };

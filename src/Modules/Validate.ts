@@ -21,13 +21,13 @@ export default function(schema: object, request: ExpressRequest, response: Expre
 {
 	if (typeof request.body !== 'object' || request.body === null)
 	{
-		handleResourceError({response, apiError: InvalidBody.generate('Not of type object.')});
+		handleResourceError({response, apiError: new InvalidBody('Not of type object.')});
 		return;
 	};
 	const validated = Joi.validate(request.body, schema, JOI_VALIDATE_OPTIONS);
 	if (validated.error)
 	{
-		handleResourceError({response, apiError: InvalidBody.generate(validated.error.message)});
+		handleResourceError({response, apiError: new InvalidBody(validated.error.message)});
 		return;
 	};
 	response.locals.parameters = validated.value;

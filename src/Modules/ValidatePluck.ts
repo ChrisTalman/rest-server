@@ -55,7 +55,7 @@ export default function(method: ResourceMethod, request: ExpressRequest, respons
 	const bodyProvided = request.query.hasOwnProperty('body');
 	if (!bodyProvided)
 	{
-		handleResourceError({response, apiError: PluckRequired.generate()});
+		handleResourceError({response, apiError: new PluckRequired()});
 		return;
 	};
 	let body: Body;
@@ -65,12 +65,12 @@ export default function(method: ResourceMethod, request: ExpressRequest, respons
 	}
 	catch (error)
 	{
-		handleResourceError({response, apiError: PluckParse.generate()});
+		handleResourceError({response, apiError: new PluckParse()});
 		return;
 	};
 	if (method.pluck && body.pluck === undefined)
 	{
-		handleResourceError({response, apiError: PluckRequired.generate()});
+		handleResourceError({response, apiError: new PluckRequired()});
 		return;
 	};
 	if (body.pluck === undefined)
@@ -81,7 +81,7 @@ export default function(method: ResourceMethod, request: ExpressRequest, respons
 	const validated = Joi.validate(body.pluck, SCHEMA);
 	if (validated.error)
 	{
-		handleResourceError({response, apiError: PluckInvalid.generate(validated.error.message)});
+		handleResourceError({response, apiError: new PluckInvalid(validated.error.message)});
 		return;
 	};
 	const pluck = validated.value;
