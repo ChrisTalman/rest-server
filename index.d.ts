@@ -4,6 +4,7 @@
 // Types
 import { Server as HttpServer } from 'http';
 import { Application as ExpressApplication, IRoute as ExpressRoute, Request as GenericExpressRequest, Response as GenericExpressResponse } from 'express';
+import * as BodyParser from 'body-parser';
 
 declare module '@chris-talman/rest-server'
 {
@@ -50,6 +51,8 @@ declare module '@chris-talman/rest-server'
 			'bearer-optional': Same as 'bearer', but only evaluated by callback if token is provided in request
 		*/
 		jsonContentTypes?: Array<string>;
+		/** Options to pass to `bodyParser.raw()`. */
+		bodyParserOptions?: BodyParser.Options;
 		authenticate?: boolean | 'bearer' | 'bearer-optional';
 		schema?: Schema;
 		pluck?: Pluck;

@@ -93,6 +93,8 @@ export interface ResourceMethod <GenericMethodName = ResourceMethodNameUpperCase
 {
 	name?: GenericMethodName;
 	jsonContentTypes?: Array<string>;
+	/** Options to pass to `bodyParser.raw()`. */
+	bodyParserOptions?: BodyParser.Options;
 	schema?: JoiSchema;
 	pluck?: Pluck;
 	exposeRawBody?: boolean;
@@ -193,7 +195,7 @@ function initialiseErrorHandler(app: ExpressApplication)
 function handleError({error, response, next}: {error: any, response: ExpressResponse, next: ExpressNextFunction})
 {
 	if (!error) next();
-	handleResourceError({response});
+	handleResourceError({response, error});
 };
 
 /** Registers routes for the given Express app. */
@@ -306,7 +308,7 @@ function initialiseResourceMethodParser <ExpressRoute> ({methodHandler, method}:
 	methodHandler((request, response, next) => handleResourceMethodJsonParse({request, response, next, resourceMethod: method}));
 };
 
-/** Run raw parser if method can have body, otherwise invoke next(). */
+/** Run raw parser if method can have body, otherwise invoke `next()`. */
 function handleResourceMethodRawParse({request, response, next, resourceMethod}: {request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction, resourceMethod: ResourceMethod})
 {
 	if ((BODYLESS_METHODS as Array<string>).includes(request.method))
@@ -315,10 +317,11 @@ function handleResourceMethodRawParse({request, response, next, resourceMethod}:
 		return;
 	};
 	const type = resourceMethod.jsonContentTypes || RAW_BODY_PARSE_CONTENT_TYPES;
-	BodyParser.raw({type})(request, response, next);
+	const { bodyParserOptions } = resourceMethod;
+	BodyParser.raw({type, ... bodyParserOptions})(request, response, next);
 };
 
-/** Run JSON parse if method can have body, otherwise invoke next(). */
+/** Run JSON parse if method can have body, otherwise invoke `next()`. */
 function handleResourceMethodJsonParse({request, response, next, resourceMethod}: {request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction, resourceMethod: ResourceMethod})
 {
 	const rawBody: Buffer = request.body;
