@@ -22,6 +22,7 @@ const RESOURCE_METHOD_SCHEMA =
 	schema: Joi.alternatives(Joi.object(), (Joi.object() as any).schema()).optional(),
 	pluck: PLUCK_SCHEMA.optional(),
 	jsonContentTypes: Joi.array().items(Joi.string()).min(1).optional(),
+	bodyParserOptions: Joi.object().optional(),
 	authenticate: Joi.alternatives
 		(
 			Joi.boolean(),
