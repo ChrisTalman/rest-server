@@ -4,7 +4,7 @@
 import Joi from 'joi';
 
 // Internal Modules
-import validate from './Validate';
+import { validate } from './Validate';
 
 // Types
 import { IRoute as ExpressRoute } from 'express';

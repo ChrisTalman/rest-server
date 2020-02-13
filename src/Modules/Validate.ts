@@ -17,7 +17,7 @@ const JOI_VALIDATE_OPTIONS: Joi.ValidationOptions =
 	presence: 'required'
 };
 
-export default function(schema: object, request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction)
+export function validate(schema: object, request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction)
 {
 	if (typeof request.body !== 'object' || request.body === null)
 	{
