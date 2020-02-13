@@ -2,7 +2,7 @@
 
 // Internal Modules
 import { handleResourceError } from 'src/Modules/Utilities';
-import { NotFound } from 'src/Modules/Errors';
+import { NotFoundError } from 'src/Modules/Errors';
 
 // Types
 import { Request as ExpressRequest, Response as ExpressResponse, NextFunction as ExpressNextFunction } from 'express';
@@ -50,7 +50,7 @@ async function retrieveParameter({resource, request, response}: {resource: Trans
 	};
 	if (!data)
 	{
-		handleResourceError({response, apiError: new NotFound(resource)});
+		handleResourceError({response, apiError: new NotFoundError(resource)});
 		return;
 	};
 	augmentLocals(resource, response, data);

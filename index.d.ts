@@ -54,17 +54,13 @@ declare module '@chris-talman/rest-server'
 		/** Options to pass to `bodyParser.raw()`. */
 		bodyParserOptions?: BodyParser.Options;
 		authenticate?: boolean | 'bearer' | 'bearer-optional';
-		schema?: Schema;
-		pluck?: Pluck;
+		schema?: object;
+		pluck?: object;
 		exposeRawBody?: boolean;
 		exposeTextBody?: boolean;
 		handler: ResourceMethodHandler;
 	}
 	type ResourceMethodNameUpperCase = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-	export interface Schema
-	{
-		[key: string]: any;
-	}
 	export type ResourceMethodHandler = ({request, response}: {request?: ExpressRequest, response?: ExpressResponse}) => void;
 
 	// Resource Retrieve
@@ -81,10 +77,27 @@ declare module '@chris-talman/rest-server'
 		resources: Resources;
 		/** Callback to run before every request handler. */
 		pre?: ({request, response}: {request?: ExpressRequest, response?: ExpressResponse}) => Promise<void>;
-		authentication?: AuthenticationConfigVariant;
+		authenticate?: AuthenticationConfigVariant;
+		/** Evaluates whether request body is valid for resource method, and returns parsed body if valid. */
+		validate: ValidationCallback;
+		/** Generates pluck value to be assigned to `response.locals.pluck` for each request. */
+		pluck?: PluckCallback;
 		root?: string;
 		debug?: Debug;
 	}
+	export type ValidationCallback = ({method, request, response}: {method: ResourceMethod, request: ExpressRequest, response: ExpressResponse}) => Promise<ValidationCallbackValidation>;
+	export type ValidationCallbackValidation = ValidationCallbackValidationValid | ValidationCallbackValidationInvalid;
+	export interface ValidationCallbackValidationValid
+	{
+		valid: true;
+		parsed: object;
+	}
+	export interface ValidationCallbackValidationInvalid
+	{
+		valid: false;
+		errorMessage: string;
+	}
+	export type PluckCallback = ({method, request, response}: {method: ResourceMethod, request: ExpressRequest, response: ExpressResponse}) => object;
 	export interface ValidatedConfig extends Config
 	{
 		root: string;
@@ -168,7 +181,7 @@ declare module '@chris-talman/rest-server'
 	}
 
 	// Errors
-	export class NotFound extends ApiError
+	export class NotFoundError extends ApiError
 	{
 		constructor(resource: string);
 	}

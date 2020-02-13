@@ -2,7 +2,7 @@
 
 // Internal Modules
 import { handleResourceError } from 'src/Modules/Utilities';
-import { BearerTokenMissing, UnauthenticatedError } from 'src/Modules/Errors';
+import { BearerTokenMissingError, UnauthenticatedError } from 'src/Modules/Errors';
 import getBearerToken from './getBearerToken';
 
 // Types
@@ -40,14 +40,14 @@ export interface CallbackParameters
 export interface CallbackPromise extends Promise <CallbackResult> {};
 export type CallbackResult = { data: object } | { ignore: true } | { error: ApiError };
 
-export default async function authenticate({method, request, response, next}: {method: ResourceMethod, request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction})
+export async function authenticate({method, request, response, next}: {method: ResourceMethod, request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction})
 {
 	if (!method.authenticate)
 	{
 		next();
 		return;
 	};
-	const appAuthentication = request.app.locals.config.authentication;
+	const appAuthentication = request.app.locals.config.authenticate;
 	if (!appAuthentication) throw new AuthenticateCallbackUnavailableError();
 	const appAuthenticationHelper = getAuthenticationHelper({method, request});
 	let bearer = undefined as any as string;
@@ -56,7 +56,7 @@ export default async function authenticate({method, request, response, next}: {m
 		const bearerResult = getBearerToken(request);
 		if (typeof bearerResult === 'object')
 		{
-			if (method.authenticate === 'bearer' || bearerResult.error !== 'unavailable') handleResourceError({response, apiError: new BearerTokenMissing()});
+			if (method.authenticate === 'bearer' || bearerResult.error !== 'unavailable') handleResourceError({response, apiError: new BearerTokenMissingError()});
 			else if (method.authenticate === 'bearer-optional') next();
 			return;
 		}
@@ -134,7 +134,7 @@ export class AuthenticateCallbackResultError extends Error
 function getAuthenticationHelper({method, request}: {method: ResourceMethod, request: ExpressRequest})
 {
 	if (method.authenticate === 'bearer' || method.authenticate === 'bearer-optional') return method.authenticate;
-	const authentication = request.app.locals.config.authentication;
+	const authentication = request.app.locals.config.authenticate;
 	if (typeof authentication === 'object' && (authentication.helper === 'bearer' || authentication.helper === 'bearer-optional')) return authentication.helper;
 	return;
 };

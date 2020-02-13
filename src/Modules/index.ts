@@ -9,48 +9,46 @@
 // To Do: Provide error objects for every error (some simply return an error status code).
 
 // External Modules
-import Express from 'express';
 import * as BodyParser from 'body-parser';
 import * as HTTP from 'http';
 import Cors from 'cors';
 import { mirror } from '@chris-talman/isomorphic-utilities';
 
 // Internal Modules
-import validateConfig from './ValidateConfig';
-import authenticate from './Authenticate';
-import { initialiseResourceMethodSchema } from './Schema';
-import validatePluck from './ValidatePluck';
+import { validateConfig } from './ValidateConfig';
+import { authenticate } from './Authenticate';
+import { initialiseResourceMethodSchema } from './Resource/Method/Schema';
+import { initialiseResourceMethodPluck } from './Resource/Method/Pluck';
 import { handleResourceMethodParameter } from './Retrieve';
-import { UnexpectedError } from './Errors';
-import { NotFound as NotFoundError } from './Errors';
+import { UnexpectedError, NotFoundError } from './Errors';
 import { resourceMethodUnavailable, jsonInvalid } from './Errors';
-export * from './Errors';
 import { handleResourceError } from './Utilities';
-export * from './Utilities';
 import { handleResourceMethodPre } from './Resource/Pre';
+
+// Exports
+export * from './Errors';
+export * from './Utilities';
 
 // Types
 import { Server as HttpServer } from 'http';
-import
-{
-	IRouterHandler as ExpressRouteHandler,
-	Application as GenericExpressApplication,
-	Router as ExpressRouter,
-	IRoute as ExpressRoute,
-	Request as GenericExpressRequest,
-	Response as GenericExpressResponse,
-	NextFunction as ExpressNextFunction
-} from 'express';
-export interface ExpressRequest extends GenericExpressRequest
+import * as Express from 'express';
+export interface ExpressRequest extends Express.Request
 {
 	app: ExpressApplication;
 	rawBody?: Buffer;
 	textBody?: string;
-	route: ExpressRoute;
+	route: Express.IRoute;
 };
-export interface ExpressResponse extends GenericExpressResponse
+export interface ExpressResponse extends Express.Response
 {
 	app: ExpressApplication;
+	locals: ExpressResponseLocals;
+};
+export interface ExpressResponseLocals
+{
+	authentication?: object;
+	pluck?: object;
+	parameters?: object;
 };
 // Resource
 export type Resources =
@@ -87,16 +85,14 @@ export type ResourceMethods =
 {
 	[MethodName in ResourceMethodNameUpperCase]?: ResourceMethod <MethodName>
 };
-import { Pluck } from './ValidatePluck';
-import { JoiSchema } from './Schema';
 export interface ResourceMethod <GenericMethodName = ResourceMethodNameUpperCase> extends ResourceMethodAuthenticate
 {
 	name?: GenericMethodName;
 	jsonContentTypes?: Array<string>;
 	/** Options to pass to `bodyParser.raw()`. */
 	bodyParserOptions?: BodyParser.Options;
-	schema?: JoiSchema;
-	pluck?: Pluck;
+	schema?: object;
+	pluck?: object;
 	exposeRawBody?: boolean;
 	exposeTextBody?: boolean;
 	handler: ResourceMethodHandler;
@@ -109,7 +105,7 @@ export interface ResourceMethodHandlerParameters <GenericRequest extends Express
 	request: GenericRequest;
 	response: GenericResponse;
 };
-export interface ExpressApplication extends GenericExpressApplication
+export interface ExpressApplication extends Express.Application
 {
 	locals: ExpressApplicationLocals;
 };
@@ -119,13 +115,19 @@ export interface ExpressApplicationLocals
 };
 // Config
 import { AppConfigVariant as AuthenticationAppConfig } from './Authenticate';
+import { ValidationCallback } from './Resource/Method/Schema';
+import { PluckCallback } from './Resource/Method/Pluck';
 export interface Config
 {
 	port: number;
 	resources: Resources;
 	/** Callback to run before every request handler. */
 	pre?: ({request, response}: {request?: ExpressRequest, response?: ExpressResponse}) => Promise<void>;
-	authentication?: AuthenticationAppConfig;
+	authenticate?: AuthenticationAppConfig;
+	/** Evaluates whether request body is valid for resource method, and returns parsed body if valid. */
+	validate: ValidationCallback;
+	/** Generates pluck value to be assigned to `response.locals.pluck` for each request. */
+	pluck?: PluckCallback;
 	root?: string;
 	debug?: Debug;
 };
@@ -188,11 +190,11 @@ function initialiseExpress(app: ExpressApplication)
 /** Initialises callback to handle middleware errors, like SyntaxError thrown by BodyParser.json(). */
 function initialiseErrorHandler(app: ExpressApplication)
 {
-	app.use((error: any, {}: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction) => handleError({error, response, next}));
+	app.use((error: any, {}: ExpressRequest, response: ExpressResponse, next: Express.NextFunction) => handleError({error, response, next}));
 };
 
 /** If middleware error exists, respond with unexpected error, otherwise invoke next() to proceed to next middleware. */
-function handleError({error, response, next}: {error: any, response: ExpressResponse, next: ExpressNextFunction})
+function handleError({error, response, next}: {error: any, response: ExpressResponse, next: Express.NextFunction})
 {
 	if (!error) next();
 	handleResourceError({response, error});
@@ -210,7 +212,7 @@ function initialiseResources(app: ExpressApplication)
 	listenResourceNotFound(app);
 };
 
-function initialiseResource({name, resource: rawResource, router, path, resourceAncestors}: {name: string, resource: Resource, router: ExpressRouter, path: string, resourceAncestors: ResourcesArray})
+function initialiseResource({name, resource: rawResource, router, path, resourceAncestors}: {name: string, resource: Resource, router: Express.Router, path: string, resourceAncestors: ResourcesArray})
 {
 	if (typeof rawResource.name === 'string' && rawResource.name !== name) throw new ResourceNameMismatch({name, resource: rawResource});
 	if (!RESOURCE_NAME_EXPRESSION.test(name[0])) throw new ResourceNameInvalid({name});
@@ -251,7 +253,7 @@ function augmentAncestors({resource, ancestors}: {resource: TransformedResource,
 };
 
 /** Logs path with console.log(), if config enables this functionality. */
-function logPath({resource, path, router}: {resource: Resource, path: string, router: ExpressRouter})
+function logPath({resource, path, router}: {resource: Resource, path: string, router: Express.Router})
 {
 	if (!router) return;
 	const methodEntries = resource.methods && Object.entries(resource.methods) as Array<[ResourceMethodNameUpperCase, ResourceMethod]>;
@@ -260,14 +262,14 @@ function logPath({resource, path, router}: {resource: Resource, path: string, ro
 	console.log(pathLog);
 };
 
-function initialiseResourceMiddleware(resource: TransformedResource, router: ExpressRouter, path: string, resourceAncestors: ResourcesArray)
+function initialiseResourceMiddleware(resource: TransformedResource, router: Express.Router, path: string, resourceAncestors: ResourcesArray)
 {
 	const route = router.route(path);
 	initialiseResourceMethods(resource, route, resourceAncestors);
 	route.all((request, response) => handleResourceMethodUnavailable({request, response}));
 };
 
-function initialiseResourceMethods(resource: Resource, route: ExpressRoute, resourceAncestors: ResourcesArray)
+function initialiseResourceMethods(resource: Resource, route: Express.IRoute, resourceAncestors: ResourcesArray)
 {
 	if (!resource.methods) return;
 	for (let methodName of Object.keys(resource.methods) as Array<ResourceMethodNameUpperCase>)
@@ -277,17 +279,17 @@ function initialiseResourceMethods(resource: Resource, route: ExpressRoute, reso
 	};
 };
 
-function initialiseResourceMethod(name: ResourceMethodNameUpperCase, method: ResourceMethod, route: ExpressRoute, resourceAncestors: ResourcesArray)
+function initialiseResourceMethod(name: ResourceMethodNameUpperCase, method: ResourceMethod, route: Express.IRoute, resourceAncestors: ResourcesArray)
 {
 	if (typeof method.name === 'string' && method.name !== name) throw new ResourceMethodMismatch({name, method});
 	method.name = name;
 	const methodIdentifier = method.name.toLowerCase();
-	const methodHandler = route[methodIdentifier as ResourceMethodNameLowerCase].bind(route) as ExpressRouteHandler <ExpressRoute>;
-	initialiseResourceMethodParser <ExpressRoute> ({methodHandler, method});
+	const methodHandler = route[methodIdentifier as ResourceMethodNameLowerCase].bind(route) as Express.IRouterHandler <Express.IRoute>;
+	initialiseResourceMethodParser <Express.IRoute> ({methodHandler, method});
 	methodHandler((request, response, next) => authenticate({method, request, response, next}));
 	initialiseResourceMethodParameter(methodHandler, resourceAncestors);
 	initialiseResourceMethodSchema(methodIdentifier, method, route);
-	if (method.pluck) methodHandler(validatePluck.bind(null, method));
+	initialiseResourceMethodPluck(methodIdentifier, method, route);
 	methodHandler((request, response, next) => handleResourceMethodPre({resourceAncestors, request, response, next}));
 	methodHandler((request, response) => handleResourceMethod({request, response, method}));
 };
@@ -302,14 +304,14 @@ class ResourceMethodMismatch extends Error
 };
 
 /** Initialise method handler callbacks to handle parsing for the method. */
-function initialiseResourceMethodParser <ExpressRoute> ({methodHandler, method}: {methodHandler: ExpressRouteHandler <ExpressRoute>, method: ResourceMethod})
+function initialiseResourceMethodParser <ExpressRoute> ({methodHandler, method}: {methodHandler: Express.IRouterHandler <ExpressRoute>, method: ResourceMethod})
 {
 	methodHandler((request, response, next) => handleResourceMethodRawParse({request, response, next, resourceMethod: method}));
 	methodHandler((request, response, next) => handleResourceMethodJsonParse({request, response, next, resourceMethod: method}));
 };
 
 /** Run raw parser if method can have body, otherwise invoke `next()`. */
-function handleResourceMethodRawParse({request, response, next, resourceMethod}: {request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction, resourceMethod: ResourceMethod})
+function handleResourceMethodRawParse({request, response, next, resourceMethod}: {request: ExpressRequest, response: ExpressResponse, next: Express.NextFunction, resourceMethod: ResourceMethod})
 {
 	if ((BODYLESS_METHODS as Array<string>).includes(request.method))
 	{
@@ -322,7 +324,7 @@ function handleResourceMethodRawParse({request, response, next, resourceMethod}:
 };
 
 /** Run JSON parse if method can have body, otherwise invoke `next()`. */
-function handleResourceMethodJsonParse({request, response, next, resourceMethod}: {request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction, resourceMethod: ResourceMethod})
+function handleResourceMethodJsonParse({request, response, next, resourceMethod}: {request: ExpressRequest, response: ExpressResponse, next: Express.NextFunction, resourceMethod: ResourceMethod})
 {
 	const rawBody: Buffer = request.body;
 	const rawBodyIsEmptyObject = typeof request.body === 'object' && request.body !== null && Object.keys(request.body).length === 0;
@@ -373,7 +375,7 @@ function handleResourceMethodJsonParse({request, response, next, resourceMethod}
 	next();
 };
 
-function initialiseResourceMethodParameter(methodHandler: ExpressRouteHandler <ExpressRoute>, resourceAncestors: ResourcesArray)
+function initialiseResourceMethodParameter(methodHandler: Express.IRouterHandler <Express.IRoute>, resourceAncestors: ResourcesArray)
 {
 	methodHandler((request, response, next) => handleResourceMethodParameter({resourceAncestors, request, response, next}));
 };
@@ -408,7 +410,7 @@ function handleResourceMethodUnavailable({response}: ResourceMethodHandlerParame
 	handleResourceError({response, apiError: resourceMethodUnavailable});
 };
 
-function initialiseSubresources(resource: TransformedResource, router: ExpressRouter, path: string, resourceAncestors: ResourcesArray)
+function initialiseSubresources(resource: TransformedResource, router: Express.Router, path: string, resourceAncestors: ResourcesArray)
 {
 	if (!resource.resources) return;
 	for (let { 0: name, 1: subresource } of (Object.entries(resource.resources) as Array<[string, Resource]>))

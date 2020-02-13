@@ -1,7 +1,7 @@
 'use strict';
 
 // External Modules
-import Joi from 'joi';
+import Joi from '@hapi/joi';
 
 // Internal Modules
 import { RestServerError } from './';
@@ -10,26 +10,21 @@ import { RestServerError } from './';
 import { Config, ValidatedConfig } from './';
 
 // Constants
-const PLUCK_SCHEMA = Joi
-	.alternatives
-	(
-		Joi.array().items(Joi.string(), Joi.lazy(() => PLUCK_SCHEMA)),
-		Joi.object().pattern(/.+/, Joi.alternatives(Joi.boolean(), Joi.lazy(() => PLUCK_SCHEMA)))
-	);
 const RESOURCE_METHOD_SCHEMA =
 {
 	name: Joi.valid('GET', 'POST', 'PUT', 'PATCH', 'DELETE').optional(),
 	schema: Joi.alternatives(Joi.object(), (Joi.object() as any).schema()).optional(),
-	pluck: PLUCK_SCHEMA.optional(),
+	pluck: Joi.alternatives(Joi.object(), Joi.array()).optional(),
 	jsonContentTypes: Joi.array().items(Joi.string()).min(1).optional(),
 	bodyParserOptions: Joi.object().optional(),
 	authenticate: Joi.alternatives
 		(
 			Joi.boolean(),
 			Joi.valid('bearer', 'bearer-optional')
-		),
-	exposeRawBody: Joi.boolean().default(false),
-	exposeTextBody: Joi.boolean().default(false),
+		)
+		.optional(),
+	exposeRawBody: Joi.boolean().default(false).optional(),
+	exposeTextBody: Joi.boolean().default(false).optional(),
 	handler: Joi.func().required()
 };
 const RESOURCE_SCHEMA =
@@ -37,8 +32,8 @@ const RESOURCE_SCHEMA =
 	name: Joi.string().optional(),
 	retrieve: Joi.func().optional(),
 	pre: Joi.func().optional(),
-	methods: Joi.object().pattern(/(?:GET|POST|PUT|PATCH|DELETE)/, RESOURCE_METHOD_SCHEMA).default({}),
-	resources: Joi.object().pattern(/.+/, Joi.lazy(() => Joi.object(RESOURCE_SCHEMA))).default({})
+	methods: Joi.object().pattern(/(?:GET|POST|PUT|PATCH|DELETE)/, RESOURCE_METHOD_SCHEMA).default({}).optional(),
+	resources: Joi.object().pattern(/.+/, Joi.link('...')).default({}).optional()
 };
 const AUTHENTICATION_SCHEMA =
 {
@@ -55,21 +50,35 @@ const DEBUG_SCHEMA = Joi.object
 			paths: Joi.boolean().optional()
 		}
 	)
-	.default(DEBUG_DEFAULT);
-const SCHEMA =
+	.default(DEBUG_DEFAULT)
+	.optional();
+const SCHEMA = Joi
+	.object
+	(
+		{
+			port: Joi.number().required(),
+			resources: Joi.object().pattern(/.+/, RESOURCE_SCHEMA).default({}).optional(),
+			pre: Joi.func().optional(),
+			authenticate: Joi.alternatives(Joi.func(), AUTHENTICATION_SCHEMA).optional(),
+			validate: Joi.func().required(),
+			pluck: Joi.func().optional(),
+			root: Joi.string().default('/').optional(),
+			debug: DEBUG_SCHEMA
+		}
+	);
+const SCHEMA_OPTIONS: Joi.ValidationOptions =
 {
-	port: Joi.number().required(),
-	resources: Joi.object().pattern(/.+/, RESOURCE_SCHEMA).default({}),
-	pre: Joi.func().optional(),
-	authentication: Joi.alternatives(Joi.func(), AUTHENTICATION_SCHEMA).optional(),
-	root: Joi.string().default('/'),
-	debug: DEBUG_SCHEMA
+	convert: false,
+	presence: 'required'
 };
 
-export default function(config: Config)
+export function validateConfig(config: Config)
 {
-	const valid = Joi.validate(config, SCHEMA);
-	if (valid.error) throw new RestServerError(valid.error.message);
-	const validated = valid.value as ValidatedConfig;
-	return validated;
+	const validated = SCHEMA.validate(config, SCHEMA_OPTIONS);
+	if (validated.error)
+	{
+		throw new RestServerError(validated.error.message);
+	};
+	const parsed: ValidatedConfig = validated.value;
+	return parsed;
 };

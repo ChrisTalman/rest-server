@@ -60,7 +60,7 @@ export class UnexpectedError extends ApiError
 };
 
 /** A request body has failed the Joi Schema. */
-export class InvalidBody extends ApiError
+export class InvalidBodyError extends ApiError
 {
 	constructor(reason: string)
 	{
@@ -75,7 +75,7 @@ export class InvalidBody extends ApiError
 };
 
 /** Entity not found. */
-export class NotFound extends ApiError
+export class NotFoundError extends ApiError
 {
 	private resourceName: string;
 	constructor(resource: TransformedResource | string)
@@ -102,7 +102,7 @@ export class NotFound extends ApiError
 	};
 };
 
-export class BearerTokenMissing extends ApiError
+export class BearerTokenMissingError extends ApiError
 {
 	constructor()
 	{
@@ -139,7 +139,7 @@ export class UnauthorisedError extends ApiError
 };
 
 /** An API error if a pluck is required for a resource method. */
-export class PluckRequired extends ApiError
+export class PluckRequiredError extends ApiError
 {
 	constructor()
 	{
@@ -153,7 +153,7 @@ export class PluckRequired extends ApiError
 };
 
 /** An API error if a pluck is invalid due to it being too long in length. */
-export class PluckLong extends ApiError
+export class PluckLongError extends ApiError
 {
 	constructor()
 	{
@@ -167,7 +167,7 @@ export class PluckLong extends ApiError
 };
 
 /** An API error if a pluck cannot be parsed. */
-export class PluckParse extends ApiError
+export class PluckParseError extends ApiError
 {
 	constructor()
 	{
@@ -181,7 +181,7 @@ export class PluckParse extends ApiError
 };
 
 /** An API error if a pluck is invalid due to it failing the pluck schema. */
-export class PluckInvalid extends ApiError
+export class PluckInvalidError extends ApiError
 {
 	constructor(reason: string)
 	{
