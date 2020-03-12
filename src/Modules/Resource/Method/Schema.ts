@@ -40,7 +40,7 @@ const VALIDATION_SCHEMA = Joi
 
 export function initialiseResourceMethodSchema(methodIdentifier: string, method: ResourceMethod, route: ExpressRoute)
 {
-	if (method.schema === undefined) return;
+	if (method.schema === undefined && method.pluck === undefined) return;
 	route[methodIdentifier]((request: ExpressRequest, response: ExpressResponse, next: Express.NextFunction) => handleSchema(method, request, response, next));
 };
 
@@ -59,7 +59,7 @@ async function handleSchema(method: ResourceMethod, request: ExpressRequest, res
 
 async function executeSchema(method: ResourceMethod, request: ExpressRequest, response: ExpressResponse, next: Express.NextFunction)
 {
-	if (method.schema === undefined) throw new Error('Schema undefined in resource method');
+	if (method.schema === undefined && method.pluck === undefined) throw new Error('Schema and pluck undefined in resource method');
 	if (request.app.locals.config.validate === undefined) throw new Error('Schema was specified for resource method, but global validation callback unspecified');
 	if (typeof request.body !== 'object' || request.body === null)
 	{
