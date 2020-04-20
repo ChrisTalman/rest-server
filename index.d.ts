@@ -61,16 +61,27 @@ declare module '@chris-talman/rest-server'
 		handler: ResourceMethodHandler;
 	}
 	type ResourceMethodNameUpperCase = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-	export type ResourceMethodHandler = ({request, response}: {request?: ExpressRequest, response?: ExpressResponse}) => void;
+	export type ResourceMethodHandler = ({request, response}: {request?: ExpressRequest, response?: ExpressResponse}) => Promise<void> | void;
 
 	// Resource Retrieve
-	export type ResourceRetrieve = (parameters: RetrieveParameters <any, any>) => Promise<ResourceRetrieveValue>;
+	export type ResourceRetrieve = ResourceRetrieveMethod | ResourceRetrieveOptions;
+	export interface ResourceRetrieveOptions
+	{
+		method: ResourceRetrieveMethod;
+		/** Determine whether resource is treated as a parameter or a fixed name. */
+		parameter?: boolean;
+		/** Determine whether to respond with an error if the resource cannot be found. */
+		optional?: boolean;
+	}
+	export type ResourceRetrieveMethod = (parameters: RetrieveParameters <any, any>) => Promise<ResourceRetrieveValue>;
 	export interface RetrieveParameters <GenericRequest extends ExpressRequest, GenericResponse extends ExpressResponse>
 	{
 		request: GenericRequest;
 		response: GenericResponse;
 	}
 	export type ResourceRetrieveValue = object | false | null | undefined;
+
+	// Config
 	export interface Config
 	{
 		port: number;

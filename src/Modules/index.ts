@@ -72,7 +72,16 @@ export interface TransformedResource extends Resource
 	name: string;
 };
 // Resource Retrieve
-export type ResourceRetrieve = (parameters: RetrieveParameters <any, any>) => Promise<ResourceRetrieveValue>;
+export type ResourceRetrieve = ResourceRetrieveMethod | ResourceRetrieveOptions;
+export interface ResourceRetrieveOptions
+{
+	method: ResourceRetrieveMethod;
+	/** Determine whether resource is treated as a parameter or a fixed name. */
+	parameter?: boolean;
+	/** Determine whether to respond with an error if the resource cannot be found. */
+	optional?: boolean;
+}
+export type ResourceRetrieveMethod = (parameters: RetrieveParameters <any, any>) => Promise<ResourceRetrieveValue>;
 export interface RetrieveParameters <GenericRequest extends ExpressRequest, GenericResponse extends ExpressResponse>
 {
 	request: GenericRequest;
@@ -99,7 +108,7 @@ export interface ResourceMethod <GenericMethodName = ResourceMethodNameUpperCase
 };
 type ResourceMethodNameUpperCase = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 type ResourceMethodNameLowerCase = 'get' | 'post' | 'put' | 'patch' | 'delete';
-export type ResourceMethodHandler = (parameters: ResourceMethodHandlerParameters) => void;
+export type ResourceMethodHandler = (parameters: ResourceMethodHandlerParameters) => Promise<void> | void;
 export interface ResourceMethodHandlerParameters <GenericRequest extends ExpressRequest = ExpressRequest, GenericResponse extends ExpressResponse = ExpressResponse>
 {
 	request: GenericRequest;
@@ -218,12 +227,22 @@ function initialiseResource({name, resource: rawResource, router, path, resource
 	if (!RESOURCE_NAME_EXPRESSION.test(name[0])) throw new ResourceNameInvalid({name});
 	const resource = rawResource as TransformedResource;
 	resource.name = name;
-	const parameterPrefix = resource.retrieve ? ':' : '';
+	const parameterPrefix = generateResourceParameterPrefix(resource);
 	path += '/' + parameterPrefix + resource.name;
 	resourceAncestors = augmentAncestors({resource, ancestors: resourceAncestors});
 	logPath({resource, path, router});
 	initialiseResourceMiddleware(resource, router, path, resourceAncestors);
 	initialiseSubresources(resource, router, path, resourceAncestors);
+};
+
+function generateResourceParameterPrefix(resource: Resource)
+{
+	let prefix = '';
+	if (typeof resource.retrieve === 'function' || (typeof resource.retrieve === 'object' && resource.retrieve.parameter !== false))
+	{
+		prefix = ':';
+	};
+	return prefix;
 };
 
 class ResourceNameInvalid extends Error

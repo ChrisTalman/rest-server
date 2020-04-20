@@ -7,7 +7,7 @@ import { NotFoundError } from 'src/Modules/Errors';
 // Types
 import { Request as ExpressRequest, Response as ExpressResponse, NextFunction as ExpressNextFunction } from 'express';
 import { ResourceRetrieveValue } from 'src/Modules';
-import { TransformedResource, ResourcesArray, ResourceRetrieve } from './';
+import { TransformedResource, ResourcesArray, ResourceRetrieveMethod } from './';
 
 export async function handleResourceMethodParameter({resourceAncestors, request, response, next}: {resourceAncestors: ResourcesArray, request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction})
 {
@@ -29,10 +29,28 @@ export async function handleResourceMethodParameter({resourceAncestors, request,
 async function retrieveParameter({resource, request, response}: {resource: TransformedResource, request: ExpressRequest, response: ExpressResponse})
 {
 	if (!isParameter({resource})) return true;
+	let method: ResourceRetrieveMethod;
+	let optional = false;
+	if (typeof resource.retrieve === 'function')
+	{
+		method = resource.retrieve;
+	}
+	else if (typeof resource.retrieve === 'object')
+	{
+		method = resource.retrieve.method;
+		if (typeof resource.retrieve.optional === 'boolean')
+		{
+			optional = resource.retrieve.optional;
+		};
+	}
+	else
+	{
+		throw new Error(`Retrieve method invalid type: ${resource.retrieve}`);
+	};
 	let data: ResourceRetrieveValue;
 	try
 	{
-		data = await (resource.retrieve as ResourceRetrieve)({request, response});
+		data = await method({request, response});
 	}
 	catch (error)
 	{
@@ -48,7 +66,7 @@ async function retrieveParameter({resource, request, response}: {resource: Trans
 		handleResourceError({response});
 		return;
 	};
-	if (!data)
+	if (!data && !optional)
 	{
 		handleResourceError({response, apiError: new NotFoundError(resource)});
 		return;
@@ -66,6 +84,6 @@ function augmentLocals(resource: TransformedResource, response: ExpressResponse,
 
 function isParameter({resource}: {resource: TransformedResource})
 {
-	const is = typeof resource.retrieve === 'function';
+	const is = typeof resource.retrieve === 'object';
 	return is;
 };
