@@ -84,6 +84,6 @@ function augmentLocals(resource: TransformedResource, response: ExpressResponse,
 
 function isParameter({resource}: {resource: TransformedResource})
 {
-	const is = typeof resource.retrieve === 'object';
+	const is = typeof resource.retrieve === 'function' || typeof resource.retrieve === 'object';
 	return is;
 };

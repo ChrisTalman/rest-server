@@ -1,6 +1,6 @@
 {
 	"name": "@chris-talman/rest-server",
-	"version": "4.2.1",
+	"version": "4.2.2",
 	"dependencies": {
 		"@chris-talman/isomorphic-utilities": "1.11.0",
 		"@hapi/joi": "17.1.0",
