@@ -27,20 +27,21 @@ const RESOURCE_METHOD_SCHEMA =
 	exposeTextBody: Joi.boolean().default(false).optional(),
 	handler: Joi.func().required()
 };
-const RESOURCE_SCHEMA_RETRIEVE = Joi.alternatives
-(
-	Joi.func().optional(),
-	Joi
-		.object
-		(
-			{
-				method: Joi.func().required(),
-				parameter: Joi.boolean().optional(),
-				optional: Joi.boolean().optional()
-			}
-		)
-		.optional()
-);
+const RESOURCE_SCHEMA_RETRIEVE = Joi
+	.alternatives
+	(
+		Joi.func(),
+		Joi
+			.object
+			(
+				{
+					method: Joi.func().required(),
+					parameter: Joi.boolean().optional(),
+					optional: Joi.boolean().optional()
+				}
+			)
+	)
+	.optional();
 const RESOURCE_SCHEMA =
 {
 	name: Joi.string().optional(),
