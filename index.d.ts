@@ -1,13 +1,11 @@
-/// <reference types="node" />
-/// <reference types="express" />
-
-// Types
-import { Server as HttpServer } from 'http';
-import { Application as ExpressApplication, IRoute as ExpressRoute, Request as GenericExpressRequest, Response as GenericExpressResponse } from 'express';
-import * as BodyParser from 'body-parser';
-
 declare module '@chris-talman/rest-server'
 {
+	// Types
+	import { Server as HttpServer } from 'http';
+	import { Application as ExpressApplication, IRoute as ExpressRoute, Request as GenericExpressRequest, Response as GenericExpressResponse } from 'express';
+	import * as BodyParser from 'body-parser';
+	import { OptionalSome } from '@chris-talman/types-helpers';
+
 	// Initialise
 	export default class RestServer
 	{
@@ -41,24 +39,34 @@ declare module '@chris-talman/rest-server'
 	{
 		[MethodName in ResourceMethodNameUpperCase]?: ResourceMethod <MethodName>
 	};
-	export interface ResourceMethod <GenericMethodName = ResourceMethodNameUpperCase>
+	export class ResourceMethod <GenericMethodName extends ResourceMethodNameUpperCase = ResourceMethodNameUpperCase, GenericPluck extends object | undefined = undefined, GenericSchema extends object | undefined = undefined>
 	{
-		name?: GenericMethodName;
+		public readonly name: GenericMethodName;
 		/**
 			true: Authentication required and evaluated by callback
 			false: Authentication ignored
 			'bearer': Authentication is required in form of RFC 6750 Bearer token
 			'bearer-optional': Same as 'bearer', but only evaluated by callback if token is provided in request
 		*/
-		jsonContentTypes?: Array<string>;
+		public readonly authenticate?: boolean | 'bearer' | 'bearer-optional';
+		public readonly handler: ResourceMethodHandler;
+		public readonly pluck: GenericPluck;
+		public readonly schema: GenericSchema;
+		public readonly jsonContentTypes?: Array<string>;
 		/** Options to pass to `bodyParser.raw()`. */
-		bodyParserOptions?: BodyParser.Options;
-		authenticate?: boolean | 'bearer' | 'bearer-optional';
-		schema?: object;
-		pluck?: object;
-		exposeRawBody?: boolean;
-		exposeTextBody?: boolean;
-		handler: ResourceMethodHandler;
+		public readonly bodyParserOptions?: BodyParser.Options;
+		public readonly exposeRawBody?: boolean;
+		public readonly exposeTextBody?: boolean;
+		constructor
+		(
+			{name, authenticate, handler, pluck, schema, jsonContentTypes, bodyParserOptions, exposeRawBody, exposeTextBody}:
+				OptionalSome<
+					Pick<
+						ResourceMethod<GenericMethodName, GenericPluck, GenericSchema>, 'name' | 'authenticate' | 'handler' | 'pluck' | 'schema' | 'jsonContentTypes' | 'bodyParserOptions' | 'exposeRawBody' | 'exposeTextBody'
+					>,
+				'authenticate' | 'pluck' | 'schema' | 'jsonContentTypes' | 'bodyParserOptions' | 'exposeRawBody' | 'exposeTextBody'
+				>
+		);
 	}
 	type ResourceMethodNameUpperCase = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 	export type ResourceMethodHandler = ({request, response}: {request?: ExpressRequest, response?: ExpressResponse}) => Promise<void> | void;

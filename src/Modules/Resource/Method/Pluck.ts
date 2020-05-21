@@ -5,10 +5,11 @@ import * as Express from 'express';
 
 // Intenral Modules
 import { handleResourceError } from 'src/Modules/Utilities';
+import { ResourceMethod } from 'src/Modules/Resource/Method';
 
 // Types
 import { IRoute as ExpressRoute } from 'express';
-import { ExpressRequest, ExpressResponse, ResourceMethod } from 'src/Modules';
+import { ExpressRequest, ExpressResponse } from 'src/Modules';
 export type PluckCallback = ({method, request, response}: {method: ResourceMethod, request: ExpressRequest, response: ExpressResponse}) => object;
 
 export function initialiseResourceMethodPluck(methodIdentifier: string, method: ResourceMethod, route: ExpressRoute)

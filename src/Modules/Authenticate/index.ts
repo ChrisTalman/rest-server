@@ -4,10 +4,11 @@
 import { handleResourceError } from 'src/Modules/Utilities';
 import { BearerTokenMissingError, UnauthenticatedError } from 'src/Modules/Errors';
 import getBearerToken from './getBearerToken';
+import { ResourceMethod } from 'src/Modules/Resource/Method';
 
 // Types
 import { NextFunction as ExpressNextFunction } from 'express';
-import { ExpressRequest, ExpressResponse, ResourceMethod } from 'src/Modules';
+import { ExpressRequest, ExpressResponse } from 'src/Modules';
 import { ApiError } from 'src/Modules/Errors';
 export type AppConfigVariant = Callback | AppConfig;
 export interface AppConfig

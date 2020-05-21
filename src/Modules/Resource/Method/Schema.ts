@@ -7,10 +7,11 @@ import Joi from '@hapi/joi';
 // Internal Modules
 import { handleResourceError } from 'src/Modules/Utilities';
 import { InvalidBodyError } from 'src/Modules/Errors';
+import { ResourceMethod } from 'src/Modules/Resource/Method';
 
 // Types
 import { IRoute as ExpressRoute } from 'express';
-import { ExpressRequest, ExpressResponse, ResourceMethod } from 'src/Modules';
+import { ExpressRequest, ExpressResponse } from 'src/Modules';
 export type ValidationCallback = ({method, request, response}: {method: ResourceMethod, request: ExpressRequest, response: ExpressResponse}) => Promise<Validation>;
 export type Validation = ValidationValid | ValidationInvalid;
 export interface ValidationValid

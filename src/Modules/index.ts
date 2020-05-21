@@ -9,29 +9,22 @@
 // To Do: Provide error objects for every error (some simply return an error status code).
 
 // External Modules
-import * as BodyParser from 'body-parser';
 import * as HTTP from 'http';
 import Cors from 'cors';
-import { mirror } from '@chris-talman/isomorphic-utilities';
 
 // Internal Modules
 import { validateConfig } from './ValidateConfig';
-import { authenticate } from './Authenticate';
-import { initialiseResourceMethodSchema } from './Resource/Method/Schema';
-import { initialiseResourceMethodPluck } from './Resource/Method/Pluck';
-import { handleResourceMethodParameter } from './Retrieve';
-import { UnexpectedError, NotFoundError } from './Errors';
-import { resourceMethodUnavailable, jsonInvalid } from './Errors';
+import { NotFoundError } from './Errors';
 import { handleResourceError } from './Utilities';
-import { handleResourceMethodPre } from './Resource/Pre';
-
-// Exports
-export * from './Errors';
-export * from './Utilities';
+import { initialiseResourceMethod, handleResourceMethodUnavailable } from './Resource/Method';
 
 // Types
 import { Server as HttpServer } from 'http';
 import * as Express from 'express';
+import { AppConfigVariant as AuthenticationAppConfig } from './Authenticate';
+import { ResourceMethod, ResourceMethods, ResourceMethodHandlerParameters, ResourceMethodNameUpperCase } from './Resource/Method';
+import { ValidationCallback } from './Resource/Method/Schema';
+import { PluckCallback } from './Resource/Method/Pluck';
 export interface ExpressRequest extends Express.Request
 {
 	app: ExpressApplication;
@@ -89,31 +82,6 @@ export interface RetrieveParameters <GenericRequest extends ExpressRequest, Gene
 };
 export type ResourceRetrieveValue = object | false;
 // Resource Methods
-import { ResourceMethodConfig as ResourceMethodAuthenticate } from './Authenticate';
-export type ResourceMethods =
-{
-	[MethodName in ResourceMethodNameUpperCase]?: ResourceMethod <MethodName>
-};
-export interface ResourceMethod <GenericMethodName = ResourceMethodNameUpperCase> extends ResourceMethodAuthenticate
-{
-	name?: GenericMethodName;
-	jsonContentTypes?: Array<string>;
-	/** Options to pass to `bodyParser.raw()`. */
-	bodyParserOptions?: BodyParser.Options;
-	schema?: object;
-	pluck?: object;
-	exposeRawBody?: boolean;
-	exposeTextBody?: boolean;
-	handler: ResourceMethodHandler;
-};
-type ResourceMethodNameUpperCase = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-type ResourceMethodNameLowerCase = 'get' | 'post' | 'put' | 'patch' | 'delete';
-export type ResourceMethodHandler = (parameters: ResourceMethodHandlerParameters) => Promise<void> | void;
-export interface ResourceMethodHandlerParameters <GenericRequest extends ExpressRequest = ExpressRequest, GenericResponse extends ExpressResponse = ExpressResponse>
-{
-	request: GenericRequest;
-	response: GenericResponse;
-};
 export interface ExpressApplication extends Express.Application
 {
 	locals: ExpressApplicationLocals;
@@ -123,9 +91,6 @@ export interface ExpressApplicationLocals
 	config: ValidatedConfig;
 };
 // Config
-import { AppConfigVariant as AuthenticationAppConfig } from './Authenticate';
-import { ValidationCallback } from './Resource/Method/Schema';
-import { PluckCallback } from './Resource/Method/Pluck';
 export interface Config
 {
 	port: number;
@@ -150,19 +115,12 @@ export interface ValidatedConfig extends Config
 };
 
 // Constants
-const BODYLESS_METHOD = mirror
-(
-	{
-		GET: true
-	}
-);
-const BODYLESS_METHODS = Object.values(BODYLESS_METHOD);
-const RAW_BODY_PARSE_CONTENT_TYPES =
-[
-	'application/json',
-	'text/plain'
-];
 const RESOURCE_NAME_EXPRESSION = /^[\w]$/;
+
+// Exports
+export { ResourceMethod } from 'src/Modules/Resource/Method';
+export * from './Errors';
+export * from './Utilities';
 
 export default class RestServer
 {
@@ -296,137 +254,6 @@ function initialiseResourceMethods(resource: Resource, route: Express.IRoute, re
 		const method = resource.methods[methodName] as ResourceMethod;
 		initialiseResourceMethod(methodName, method, route, resourceAncestors);
 	};
-};
-
-function initialiseResourceMethod(name: ResourceMethodNameUpperCase, method: ResourceMethod, route: Express.IRoute, resourceAncestors: ResourcesArray)
-{
-	if (typeof method.name === 'string' && method.name !== name) throw new ResourceMethodMismatch({name, method});
-	method.name = name;
-	const methodIdentifier = method.name.toLowerCase();
-	const methodHandler = route[methodIdentifier as ResourceMethodNameLowerCase].bind(route) as Express.IRouterHandler <Express.IRoute>;
-	initialiseResourceMethodParser <Express.IRoute> ({methodHandler, method});
-	methodHandler((request, response, next) => authenticate({method, request, response, next}));
-	initialiseResourceMethodParameter(methodHandler, resourceAncestors);
-	initialiseResourceMethodSchema(methodIdentifier, method, route);
-	initialiseResourceMethodPluck(methodIdentifier, method, route);
-	methodHandler((request, response, next) => handleResourceMethodPre({resourceAncestors, request, response, next}));
-	methodHandler((request, response) => handleResourceMethod({request, response, method}));
-};
-
-class ResourceMethodMismatch extends Error
-{
-	constructor({name, method}: {name: string, method: ResourceMethod})
-	{
-		const message = 'Resource method name \'' + name + '\' mismatch with method.name \'' + method.name + '\'';
-		super(message);
-	};
-};
-
-/** Initialise method handler callbacks to handle parsing for the method. */
-function initialiseResourceMethodParser <ExpressRoute> ({methodHandler, method}: {methodHandler: Express.IRouterHandler <ExpressRoute>, method: ResourceMethod})
-{
-	methodHandler((request, response, next) => handleResourceMethodRawParse({request, response, next, resourceMethod: method}));
-	methodHandler((request, response, next) => handleResourceMethodJsonParse({request, response, next, resourceMethod: method}));
-};
-
-/** Run raw parser if method can have body, otherwise invoke `next()`. */
-function handleResourceMethodRawParse({request, response, next, resourceMethod}: {request: ExpressRequest, response: ExpressResponse, next: Express.NextFunction, resourceMethod: ResourceMethod})
-{
-	if ((BODYLESS_METHODS as Array<string>).includes(request.method))
-	{
-		next();
-		return;
-	};
-	const type = resourceMethod.jsonContentTypes || RAW_BODY_PARSE_CONTENT_TYPES;
-	const { bodyParserOptions } = resourceMethod;
-	BodyParser.raw({type, ... bodyParserOptions})(request, response, next);
-};
-
-/** Run JSON parse if method can have body, otherwise invoke `next()`. */
-function handleResourceMethodJsonParse({request, response, next, resourceMethod}: {request: ExpressRequest, response: ExpressResponse, next: Express.NextFunction, resourceMethod: ResourceMethod})
-{
-	const rawBody: Buffer = request.body;
-	const rawBodyIsEmptyObject = typeof request.body === 'object' && request.body !== null && Object.keys(request.body).length === 0;
-	if (rawBodyIsEmptyObject)
-	{
-		next();
-		return;
-	};
-	let textBody: string;
-	if (rawBody)
-	{
-		textBody = rawBody.toString();
-	}
-	else
-	{
-		const isBodylessMethod = (BODYLESS_METHODS as Array<string>).includes(request.method);
-		const queryBodyAvailable = 'body' in request.query;
-		if (isBodylessMethod && queryBodyAvailable)
-		{
-			textBody = request.query.body;
-		}
-		else
-		{
-			request.body = undefined;
-			next();
-			return;
-		};
-	};
-	if (textBody === undefined || textBody.length === 0)
-	{
-		request.body = undefined;
-		next();
-		return;
-	};
-	let body: any;
-	try
-	{
-		body = JSON.parse(textBody);
-	}
-	catch (error)
-	{
-		handleResourceError({response, apiError: jsonInvalid});
-		return;
-	};
-	if (resourceMethod.exposeRawBody) request.rawBody = rawBody;
-	if (resourceMethod.exposeTextBody) request.textBody = textBody;
-	request.body = body;
-	next();
-};
-
-function initialiseResourceMethodParameter(methodHandler: Express.IRouterHandler <Express.IRoute>, resourceAncestors: ResourcesArray)
-{
-	methodHandler((request, response, next) => handleResourceMethodParameter({resourceAncestors, request, response, next}));
-};
-
-/**
-	Invokes the resource method handler.
-	Any exceptions unhandled by handler code are gracefully handled with an UnexpectedError response.
-*/
-async function handleResourceMethod({request, response, method}: {request: ExpressRequest, response: ExpressResponse, method: ResourceMethod})
-{
-	const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-	try
-	{
-		if (method.handler instanceof AsyncFunction)
-		{
-			await method.handler({request, response});
-		}
-		else
-		{
-			method.handler({request, response});
-		};
-	}
-	catch (error)
-	{
-		handleResourceError({error, response, apiError: new UnexpectedError()});
-		return;
-	};
-};
-
-function handleResourceMethodUnavailable({response}: ResourceMethodHandlerParameters)
-{
-	handleResourceError({response, apiError: resourceMethodUnavailable});
 };
 
 function initialiseSubresources(resource: TransformedResource, router: Express.Router, path: string, resourceAncestors: ResourcesArray)
