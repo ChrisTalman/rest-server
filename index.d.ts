@@ -37,7 +37,7 @@ declare module '@chris-talman/rest-server'
 	// Resource Methods
 	export type ResourceMethods =
 	{
-		[MethodName in ResourceMethodNameUpperCase]?: ResourceMethod <MethodName>
+		[MethodName in ResourceMethodNameUpperCase]?: ResourceMethod <MethodName, any, any>
 	};
 	export class ResourceMethod <GenericMethodName extends ResourceMethodNameUpperCase = ResourceMethodNameUpperCase, GenericPluck extends object | undefined = undefined, GenericSchema extends object | undefined = undefined>
 	{
