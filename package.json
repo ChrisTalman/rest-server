@@ -1,8 +1,9 @@
 {
 	"name": "@chris-talman/rest-server",
-	"version": "5.0.1",
+	"version": "5.0.2",
 	"dependencies": {
 		"@chris-talman/isomorphic-utilities": "1.11.0",
+		"@chris-talman/types-helpers": "2.1.0",
 		"@hapi/joi": "17.1.0",
 		"@types/express": "4.16.0",
 		"@types/node": "11.9.6",
@@ -11,10 +12,9 @@
 		"express": "4.16.4"
 	},
 	"devDependencies": {
-		"@chris-talman/types-helpers": "2.1.0",
 		"@types/cors": "2.8.4",
 		"@types/hapi__joi": "16.0.9",
-		"nodemon": "1.18.8",
+		"nodemon": "2.0.4",
 		"ts-loader": "7.0.4",
 		"typescript": "3.9.3",
 		"webpack": "4.43.0",
