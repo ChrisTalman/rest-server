@@ -30,6 +30,7 @@ export interface ResourceMethodHandlerParameters <GenericRequest extends Express
 	request: GenericRequest;
 	response: GenericResponse;
 };
+type ResourceMethodSchemaVariant <GenericSchema extends object | undefined = undefined> = GenericSchema | (({request, response}: {request: ExpressRequest, response: ExpressResponse}) => GenericSchema);
 
 // Constants
 const BODYLESS_METHOD = mirror
@@ -45,7 +46,7 @@ const RAW_BODY_PARSE_CONTENT_TYPES =
 	'text/plain'
 ];
 
-export class ResourceMethod <GenericMethodName extends ResourceMethodNameUpperCase = ResourceMethodNameUpperCase, GenericPluck extends object | undefined = undefined, GenericSchema extends object | undefined = undefined>
+export class ResourceMethod <GenericMethodName extends ResourceMethodNameUpperCase = ResourceMethodNameUpperCase, GenericPluck extends object | undefined = undefined, GenericSchema extends ResourceMethodSchemaVariant = undefined>
 {
 	public readonly name: GenericMethodName;
 	/**

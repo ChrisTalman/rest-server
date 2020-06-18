@@ -39,7 +39,7 @@ declare module '@chris-talman/rest-server'
 	{
 		[MethodName in ResourceMethodNameUpperCase]?: ResourceMethod <MethodName, any, any>
 	};
-	export class ResourceMethod <GenericMethodName extends ResourceMethodNameUpperCase = ResourceMethodNameUpperCase, GenericPluck extends object | undefined = undefined, GenericSchema extends object | undefined = undefined>
+	export class ResourceMethod <GenericMethodName extends ResourceMethodNameUpperCase = ResourceMethodNameUpperCase, GenericPluck extends object | undefined = undefined, GenericSchema extends ResourceMethodSchemaVariant = undefined>
 	{
 		public readonly name: GenericMethodName;
 		/**
@@ -70,6 +70,7 @@ declare module '@chris-talman/rest-server'
 	}
 	type ResourceMethodNameUpperCase = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 	export type ResourceMethodHandler = ({request, response}: {request?: ExpressRequest, response?: ExpressResponse}) => Promise<void> | void;
+	type ResourceMethodSchemaVariant <GenericSchema extends object | undefined = undefined> = GenericSchema | (({request, response}: {request: ExpressRequest, response: ExpressResponse}) => GenericSchema);
 
 	// Resource Retrieve
 	export type ResourceRetrieve = ResourceRetrieveMethod | ResourceRetrieveOptions;
