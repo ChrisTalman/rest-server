@@ -13,7 +13,7 @@ import { Config, ValidatedConfig } from './';
 const RESOURCE_METHOD_SCHEMA =
 {
 	name: Joi.valid('GET', 'POST', 'PUT', 'PATCH', 'DELETE').optional(),
-	schema: Joi.alternatives(Joi.object(), (Joi.object() as any).schema()).optional(),
+	schema: Joi.alternatives(Joi.object(), (Joi.object() as any).schema(), Joi.func()).optional(),
 	pluck: Joi.alternatives(Joi.object(), Joi.array()).optional(),
 	jsonContentTypes: Joi.array().items(Joi.string()).min(1).optional(),
 	bodyParserOptions: Joi.object().optional(),
