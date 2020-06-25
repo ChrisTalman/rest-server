@@ -11,7 +11,7 @@ import { TransformedResource, ResourcesArray, ResourceRetrieveMethod } from './'
 
 export async function handleResourceMethodParameter({resourceAncestors, request, response, next}: {resourceAncestors: ResourcesArray, request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction})
 {
-	const results: Array<true | undefined> = [];
+	const results: Array <true | undefined> = [];
 	for (let resource of resourceAncestors)
 	{
 		const result = await retrieveParameter({resource: resource as TransformedResource, request, response});
@@ -45,7 +45,8 @@ async function retrieveParameter({resource, request, response}: {resource: Trans
 	}
 	else
 	{
-		throw new Error(`Retrieve method invalid type: ${resource.retrieve}`);
+		handleResourceError({response, error: new Error(`Unexpected type of retrieve() property for '${request.path}': ${resource.retrieve}`)});
+		return;
 	};
 	let data: ResourceRetrieveValue;
 	try
@@ -59,6 +60,7 @@ async function retrieveParameter({resource, request, response}: {resource: Trans
 	};
 	if (data === undefined)
 	{
+		handleResourceError({response, error: new Error(`Expected non-undefined value from retrieve() for '${request.path}': '${data}'`)});
 		return;
 	};
 	if (data === false)
