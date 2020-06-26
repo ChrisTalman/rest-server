@@ -60,7 +60,7 @@ async function retrieveParameter({resource, request, response}: {resource: Trans
 	};
 	if (data === undefined)
 	{
-		handleResourceError({response, error: new Error(`Expected non-undefined value from retrieve() for '${request.path}': '${data}'`)});
+		handleResourceError({response, error: new Error(`Expected non-undefined value from retrieve() for '${request.path}'`)});
 		return;
 	};
 	if (data === false)
