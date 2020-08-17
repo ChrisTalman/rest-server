@@ -69,12 +69,14 @@ export class ResourceMethod
 	public readonly bodyParserOptions?: BodyParser.Options;
 	public readonly exposeRawBody?: boolean;
 	public readonly exposeTextBody?: boolean;
+	/** Determines whether request body should be treated as JSON. Default: true. */
+	public readonly json?: boolean;
 	constructor
 	(
-		{name, authenticate, handler, pluck, schema, jsonContentTypes, bodyParserOptions, exposeRawBody, exposeTextBody}:
+		{name, authenticate, handler, pluck, schema, jsonContentTypes, bodyParserOptions, exposeRawBody, exposeTextBody, json = true}:
 			OptionalSome<
 				Pick<
-					ResourceMethod<GenericMethodName, GenericPluck, GenericSchema>, 'name' | 'authenticate' | 'handler' | 'pluck' | 'schema' | 'jsonContentTypes' | 'bodyParserOptions' | 'exposeRawBody' | 'exposeTextBody'
+					ResourceMethod<GenericMethodName, GenericPluck, GenericSchema>, 'name' | 'authenticate' | 'handler' | 'pluck' | 'schema' | 'jsonContentTypes' | 'bodyParserOptions' | 'exposeRawBody' | 'exposeTextBody' | 'json'
 				>,
 			'authenticate' | 'pluck' | 'schema' | 'jsonContentTypes' | 'bodyParserOptions' | 'exposeRawBody' | 'exposeTextBody'
 			>
@@ -89,6 +91,7 @@ export class ResourceMethod
 		this.bodyParserOptions = bodyParserOptions;
 		this.exposeRawBody = exposeRawBody;
 		this.exposeTextBody = exposeTextBody;
+		this.json = json;
 	};
 };
 
@@ -141,6 +144,11 @@ function handleResourceMethodRawParse({request, response, next, resourceMethod}:
 /** Run JSON parse if method can have body, otherwise invoke `next()`. */
 function handleResourceMethodJsonParse({request, response, next, resourceMethod}: {request: ExpressRequest, response: ExpressResponse, next: Express.NextFunction, resourceMethod: ResourceMethod})
 {
+	if (resourceMethod.json === false)
+	{
+		next();
+		return;
+	};
 	const rawBody: Buffer = request.body;
 	const rawBodyIsEmptyObject = typeof request.body === 'object' && request.body !== null && Object.keys(request.body).length === 0;
 	if (rawBodyIsEmptyObject)

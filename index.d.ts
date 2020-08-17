@@ -62,6 +62,8 @@ declare module '@chris-talman/rest-server'
 		public readonly bodyParserOptions?: BodyParser.Options;
 		public readonly exposeRawBody?: boolean;
 		public readonly exposeTextBody?: boolean;
+		/** Determines whether request body should be treated as JSON. Default: true. */
+		public readonly json?: boolean;
 		constructor
 		(
 			{name, authenticate, handler, pluck, schema, jsonContentTypes, bodyParserOptions, exposeRawBody, exposeTextBody}:
