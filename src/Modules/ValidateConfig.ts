@@ -25,6 +25,7 @@ const RESOURCE_METHOD_SCHEMA =
 		.optional(),
 	exposeRawBody: Joi.boolean().default(false).optional(),
 	exposeTextBody: Joi.boolean().default(false).optional(),
+	json: Joi.boolean().default(false).optional(),
 	handler: Joi.func().required()
 };
 const RESOURCE_SCHEMA_RETRIEVE = Joi
