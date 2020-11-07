@@ -7,13 +7,13 @@ declare module '@chris-talman/rest-server'
 	import { OptionalSome } from '@chris-talman/types-helpers';
 
 	// Initialise
-	export default class RestServer
+	export default class RestServer <GenericExpressRequest extends ExpressRequest = ExpressRequest, GenericExpressResponse extends ExpressResponse = ExpressResponse>
 	{
-		public readonly config: ValidatedConfig;
+		public readonly config: ValidatedConfig <GenericExpressRequest, GenericExpressResponse>;
 		public readonly app: ExpressApplication;
 		public readonly httpServer: HttpServer;
 		/** Constructs instance. */
-		constructor(config: Config);
+		constructor(config: Config <GenericExpressRequest, GenericExpressResponse>);
 		/** Closes HTTP server socket, preventing new requests. Promise resolves once all active connections have gracefully closed. */
 		public stop(): Promise<void>;
 	}
@@ -29,7 +29,7 @@ declare module '@chris-talman/rest-server'
 		/** Method to retrieve resource. Stores resource in locals object. Returns 404 if not found. */
 		retrieve?: ResourceRetrieve;
 		/** Callback to run before every request handler. */
-		pre?: ({request, response}: {request?: ExpressRequest, response?: ExpressResponse}) => Promise<boolean | void>;
+		pre?: ({request, response}: {request: GenericExpressRequest, response: GenericExpressResponse}) => Promise <boolean | void>;
 		methods?: ResourceMethods;
 		resources?: Resources;
 	}
@@ -37,11 +37,13 @@ declare module '@chris-talman/rest-server'
 	// Resource Methods
 	export type ResourceMethods =
 	{
-		[MethodName in ResourceMethodNameUpperCase]?: ResourceMethod <MethodName, any, any>
+		[MethodName in ResourceMethodNameUpperCase]?: ResourceMethod <MethodName, any, any, any, any>
 	};
 	export class ResourceMethod
 	<
 		GenericMethodName extends ResourceMethodNameUpperCase = ResourceMethodNameUpperCase,
+		GenericExpressRequest extends ExpressRequest = ExpressRequest,
+		GenericExpressResponse extends ExpressResponse = ExpressResponse,
 		GenericPluck extends object | undefined = undefined,
 		GenericSchema extends object | ResourceMethodSchemaCallback | undefined = undefined
 	>
@@ -54,7 +56,7 @@ declare module '@chris-talman/rest-server'
 			'bearer-optional': Same as 'bearer', but only evaluated by callback if token is provided in request
 		*/
 		public readonly authenticate?: boolean | 'bearer' | 'bearer-optional';
-		public readonly handler: ResourceMethodHandler;
+		public readonly handler: ResourceMethodHandler <GenericExpressRequest, GenericExpressResponse>;
 		public readonly pluck: GenericPluck;
 		public readonly schema: GenericSchema;
 		public readonly jsonContentTypes?: Array<string>;
@@ -69,14 +71,14 @@ declare module '@chris-talman/rest-server'
 			{name, authenticate, handler, pluck, schema, jsonContentTypes, bodyParserOptions, exposeRawBody, exposeTextBody}:
 				OptionalSome<
 					Pick<
-						ResourceMethod<GenericMethodName, GenericPluck, GenericSchema>, 'name' | 'authenticate' | 'handler' | 'pluck' | 'schema' | 'jsonContentTypes' | 'bodyParserOptions' | 'exposeRawBody' | 'exposeTextBody' | 'json'
+						ResourceMethod <GenericMethodName, GenericExpressRequest, GenericExpressResponse, GenericPluck, GenericSchema>, 'name' | 'authenticate' | 'handler' | 'pluck' | 'schema' | 'jsonContentTypes' | 'bodyParserOptions' | 'exposeRawBody' | 'exposeTextBody'
 					>,
 				'authenticate' | 'pluck' | 'schema' | 'jsonContentTypes' | 'bodyParserOptions' | 'exposeRawBody' | 'exposeTextBody'
 				>
 		);
 	}
 	type ResourceMethodNameUpperCase = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-	export type ResourceMethodHandler = ({request, response}: {request?: ExpressRequest, response?: ExpressResponse}) => Promise<void> | void;
+	export type ResourceMethodHandler <GenericExpressRequest extends ExpressRequest, GenericExpressResponse extends ExpressResponse> = ({request, response}: {request: GenericExpressRequest, response: GenericExpressResponse}) => Promise<void> | void;
 	type ResourceMethodSchemaCallback = ({request, response}: {request: ExpressRequest, response: ExpressResponse}) => object;
 
 	// Resource Retrieve
@@ -98,13 +100,13 @@ declare module '@chris-talman/rest-server'
 	export type ResourceRetrieveValue = object | false | null | undefined;
 
 	// Config
-	export interface Config
+	export interface Config <GenericExpressRequest extends ExpressRequest, GenericExpressResponse extends ExpressResponse>
 	{
 		port: number;
 		resources: Resources;
 		/** Callback to run before every request handler. */
-		pre?: ({request, response}: {request?: ExpressRequest, response?: ExpressResponse}) => Promise<void>;
-		authenticate?: AuthenticationConfigVariant;
+		pre?: ({request, response}: {request: GenericExpressRequest, response: GenericExpressResponse}) => Promise <void>;
+		authenticate?: AuthenticationConfigVariant <GenericExpressRequest, GenericExpressResponse>;
 		/** Evaluates whether request body is valid for resource method, and returns parsed body if valid. */
 		validate: ValidationCallback;
 		/** Generates pluck value to be assigned to `response.locals.pluck` for each request. */
@@ -125,21 +127,21 @@ declare module '@chris-talman/rest-server'
 		errorMessage: string;
 	}
 	export type PluckCallback = ({method, request, response}: {method: ResourceMethod, request: ExpressRequest, response: ExpressResponse}) => object;
-	export interface ValidatedConfig extends Config
+	export interface ValidatedConfig <GenericExpressRequest extends ExpressRequest, GenericExpressResponse extends ExpressResponse> extends Config <GenericExpressRequest, GenericExpressResponse>
 	{
 		root: string;
 	}
-	export type AuthenticationConfigVariant = AuthenticationCallback | AuthenticationConfig;
-	export interface AuthenticationConfig
+	export type AuthenticationConfigVariant <GenericExpressRequest extends ExpressRequest, GenericExpressResponse extends ExpressResponse> = AuthenticationCallback <GenericExpressRequest, GenericExpressResponse> | AuthenticationConfig <GenericExpressRequest, GenericExpressResponse>;
+	export interface AuthenticationConfig <GenericExpressRequest extends ExpressRequest, GenericExpressResponse extends ExpressResponse>
 	{
-		callback: AuthenticationCallback;
+		callback: AuthenticationCallback <GenericExpressRequest, GenericExpressResponse>;
 		/**
 			'bearer': Authentication is required in form of RFC 6750 Bearer token
 			'bearer-optional': Same as 'bearer', but only evaluated by callback if token is provided in request
 		*/
 		helper?: 'bearer' | 'bearer-optional';
 	}
-	export type AuthenticationCallback = ({method, request, response}: {method: ResourceMethod, request: ExpressRequest, response: ExpressResponse}) => AuthenticationCallbackPromise;
+	export type AuthenticationCallback <GenericExpressRequest extends ExpressRequest, GenericExpressResponse extends ExpressResponse> = ({method, request, response}: {method: ResourceMethod, request: GenericExpressRequest, response: GenericExpressResponse}) => AuthenticationCallbackPromise;
 	export interface AuthenticationCallbackPromise extends Promise <AuthenticationCallbackResult> {}
 	export type AuthenticationCallbackResult = { data: object } | { unprovided: true } | { error: ApiError };
 	export interface Debug
