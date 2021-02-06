@@ -16,6 +16,7 @@ export async function handleResourceMethodParameter({resourceAncestors, request,
 	{
 		const result = await retrieveParameter({resource: resource as TransformedResource, request, response});
 		results.push(result);
+		if (result !== true) break;
 	};
 	const success = results.every(result => result === true);
 	if (!success) return;
