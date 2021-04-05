@@ -223,7 +223,7 @@ async function handleResourceMethod({request, response, method}: {request: Expre
 	}
 	catch (error)
 	{
-		handleResourceError({error, response, apiError: new UnexpectedError()});
+		handleResourceError({error, request, response, apiError: new UnexpectedError()});
 		return;
 	};
 };

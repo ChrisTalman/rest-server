@@ -1,14 +1,18 @@
 'use strict';
 
 // Types
-import { Response as ExpressResponse } from 'express';
+import { Request as ExpressRequest, Response as ExpressResponse } from 'express';
 import { ApiError, UnexpectedError } from 'src/Modules/Errors';
 
 /** Handles the given resource error. */
-export function handleResourceError(parameters: {response: ExpressResponse, apiError?: ApiError, error?: Error, status?: number})
+export function handleResourceError(parameters: {request?: ExpressRequest, response: ExpressResponse, apiError?: ApiError, error?: Error, status?: number})
 {
 	const { response } = parameters;
-	if (parameters.error) console.log(parameters.error.stack || parameters.error);
+	if (parameters.error)
+	{
+		parameters.request
+		console.log(`${parameters.request ? `${parameters.request.path}\n` : ''}${parameters.error.stack || parameters.error}`);
+	};
 	if (response.headersSent) return;
 	const apiError = parameters.apiError || new UnexpectedError();
 	const status = parameters.status ? parameters.status : apiError.status;
