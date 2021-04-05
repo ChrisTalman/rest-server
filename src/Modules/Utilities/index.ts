@@ -11,7 +11,7 @@ export function handleResourceError(parameters: {request?: ExpressRequest, respo
 	if (parameters.error)
 	{
 		parameters.request
-		console.log(`REST Error:${parameters.request ? ` ${parameters.request.route.path}` : ''}\n${parameters.error.stack || parameters.error}`);
+		console.log(`REST Error:${parameters.request?.route?.path ? ` ${parameters.request.route.path}` : ''}\n${parameters.error.stack || parameters.error}`);
 	};
 	if (response.headersSent) return;
 	const apiError = parameters.apiError || new UnexpectedError();
