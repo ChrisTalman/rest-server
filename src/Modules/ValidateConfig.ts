@@ -58,13 +58,13 @@ const AUTHENTICATION_SCHEMA =
 };
 const DEBUG_DEFAULT =
 {
-	paths: false,
-	handleError: Joi.func().optional()
+	paths: false
 };
 const DEBUG_SCHEMA = Joi.object
 	(
 		{
-			paths: Joi.boolean().optional()
+			paths: Joi.boolean().optional(),
+			handleError: Joi.func().optional()
 		}
 	)
 	.default(DEBUG_DEFAULT)
