@@ -224,6 +224,15 @@ async function handleResourceMethod({request, response, method}: {request: Expre
 	catch (error)
 	{
 		handleResourceError({error, request, response, apiError: new UnexpectedError()});
+		try
+		{
+			await request.app.locals.instance.config.debug?.handleError?.({error, request, response});
+		}
+		catch (error)
+		{
+			console.error('Debug handleError failed:\n', error);
+			return;
+		};
 		return;
 	};
 };

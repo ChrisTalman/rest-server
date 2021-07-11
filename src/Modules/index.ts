@@ -89,6 +89,7 @@ export interface ExpressApplication extends Express.Application
 export interface ExpressApplicationLocals
 {
 	config: ValidatedConfig;
+	instance: RestServer;
 };
 // Config
 export interface Config
@@ -108,6 +109,7 @@ export interface Config
 export interface Debug
 {
 	paths?: boolean;
+	handleError?: (parameters: {error: any, request: ExpressRequest, response: ExpressResponse}) => Promise <void>;
 };
 export interface ValidatedConfig extends Config
 {
@@ -133,6 +135,7 @@ export default class RestServer
 		this.config = validateConfig(rawConfig);
 		this.app = Express();
 		this.app.locals.config = this.config;
+		this.app.locals.instance = this;
 		initialiseExpress(this.app);
 		initialiseResources(this.app);
 		initialiseErrorHandler(this.app);
