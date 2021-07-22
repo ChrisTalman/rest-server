@@ -147,7 +147,7 @@ declare module '@chris-talman/rest-server'
 	export interface Debug
 	{
 		paths?: boolean;
-		handleError?: (parameters: {error: any, request: ExpressRequest, response: ExpressResponse}) => Promise <void>;
+		handleError?: (parameters: {error: any, request: GenericExpressRequest, response: GenericExpressResponse}) => Promise <void>;
 	}
 
 	/** Represents API error. */
