@@ -42,6 +42,7 @@ export interface ExpressResponseLocals
 	authentication?: object;
 	pluck?: object;
 	parameters?: object;
+	parametersUnvalidated?: object;
 };
 // Resource
 export type Resources =

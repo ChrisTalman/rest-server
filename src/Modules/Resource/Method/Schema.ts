@@ -67,6 +67,7 @@ async function executeSchema(method: ResourceMethod, request: ExpressRequest, re
 		handleResourceError({response, apiError: new InvalidBodyError('Not of type object')});
 		return;
 	};
+	response.locals.parametersUnvalidated = request.body;
 	const validation = await request.app.locals.config.validate({method, request, response});
 	try
 	{

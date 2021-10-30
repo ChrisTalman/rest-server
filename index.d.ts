@@ -188,6 +188,7 @@ declare module '@chris-talman/rest-server'
 		authentication?: object;
 		resourceData?: object;
 		parameters?: object;
+		parametersUnvalidated?: object;
 		pluck?: object;
 	}
 	export type Pluck = string | ArrayPluck | ObjectPluck;
